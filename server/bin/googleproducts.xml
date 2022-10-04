@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:g="http://base.google.com/ns/1.0" version="2.0">
+    <channel>
+        <title>CLOTH</title>
+        <description>expressCart</description>
+        <link>http://localhost:1111</link>
+        <item>
+            <g:title>Bag 12</g:title>
+            <g:id>5e77c6bb070e6024d0d60ce3</g:id>
+            <g:link>http://localhost:1111/product/bag-12</g:link>
+            <g:description>&lt;p&gt;Product description *Product description *Product description *Product description *Product description *Product description *Product description *&lt;br /&gt;&lt;/p&gt;</g:description>
+            <g:price>10.00 USD</g:price>
+            <g:image_link>http://localhost:1111/uploads/placeholder.png</g:image_link>
+            <g:availability>in stock</g:availability>
+        </item>
+        <item>
+            <g:title>test1</g:title>
+            <g:id>633b8118aac822d93a6d237a</g:id>
+            <g:link>http://localhost:1111/product/test1</g:link>
+            <g:description>sadasdasd sadas asdas dasdsad</g:description>
+            <g:price>11.00 USD</g:price>
+            <g:image_link>http://localhost:1111/uploads/placeholder.png</g:image_link>
+            <g:availability>in stock</g:availability>
+            <g:gtin>12</g:gtin>
+        </item>
+        <item>
+            <g:title>asdasda asdasd ssss</g:title>
+            <g:id>633c25521f1bccf2e0adc13b</g:id>
+            <g:link>http://localhost:1111/product/asdasda-asdasd</g:link>
+            <g:description>&lt;p&gt;sadasd asda dasd asd as&lt;/p&gt;</g:description>
+            <g:price>12.00 USD</g:price>
+            <g:image_link>http://localhost:1111//uploads/placeholder.png</g:image_link>
+            <g:availability>in stock</g:availability>
+        </item>
+    </channel>
+</rss>
