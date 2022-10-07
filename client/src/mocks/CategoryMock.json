@@ -1,7 +1,26 @@
 [
     {
         "name": "עוגות גבינה",
-        "img": "",
-        "count": ""
+        "img": "https://firebasestorage.googleapis.com/v0/b/creme-caramel.appspot.com/o/categories%2Fcheese-cake.jpg?alt=media&token=7add856a-64d1-429b-a5e3-9d712ac23b7d",
+        "count": "",
+        "id": "1"
+    },
+    {
+        "name": "עוגות שוקולד",
+        "img": "https://firebasestorage.googleapis.com/v0/b/creme-caramel.appspot.com/o/categories%2Fchocolate-cake.jpg?alt=media&token=94607fa1-b8f5-4e4e-8917-c1b3e4c67308",
+        "count": "",
+        "id": "2"
+    },
+    {
+        "name": "עוגות מוחדות",
+        "img": "https://firebasestorage.googleapis.com/v0/b/creme-caramel.appspot.com/o/categories%2Funique-cake.jpeg?alt=media&token=9e8b22f8-b711-46bd-b16c-1aedae0bdbde",
+        "count": "",
+        "id": "3"
+    },
+    {
+        "name": "עוגות יום הולדת",
+        "img": "https://firebasestorage.googleapis.com/v0/b/creme-caramel.appspot.com/o/categories%2Fbirthday-cake.jpeg?alt=media&token=358251f6-4cbc-4927-ab17-d3717f43ae48",
+        "count": "",
+        "id": "2"
     }
 ]

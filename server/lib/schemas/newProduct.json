@@ -1,63 +1,43 @@
 {
     "$id": "newProduct",
     "type": "object",
+
     "properties": {
-        "productPermalink": {
+        "name": {
             "type": "string",
             "isNotEmpty": true,
             "minLength": 2
         },
-        "productTitle": {
+        "img": {
             "type": "string",
             "isNotEmpty": true,
             "minLength": 5
         },
-        "productPrice": {
+        "categoryId": {
             "type": "string",
             "format": "amount"
         },
-        "productDescription": {
+        "description": {
             "type": "string",
             "isNotEmpty": true,
             "minLength": 25
         },
-        "productGtin": {
+        "price": {
             "type": ["string", "null"],
             "format": "alphanumeric",
             "maxLength": 16
         },
-        "productBrand": {
+        "count": {
             "type": "string",
             "maxLength": 50
-        },
-        "productPublished": {
-            "type": "boolean"
-        },
-        "productTags": {
-            "type": "string"
-        },
-        "productComment": {
-            "type": "boolean"
-        },
-        "productStock": {
-            "type": ["number", "null"]
-        },
-        "productStockDisable": {
-            "type": "boolean"
-        }
-    },
-    "errorMessage": {
-        "properties": {
-            "productPrice": "Should be a full 2 decimal value. Eg: 10.99",
-            "productPublished": "Should be either true or false",
-            "productComment": "Should be either true or false"
         }
     },
     "required": [
-        "productPermalink",
-        "productTitle",
-        "productPrice",
-        "productDescription",
-        "productPublished"
+        "name",
+        "img",
+        "categoryId",
+        "description",
+        "price",
+        "count"
     ]
 }

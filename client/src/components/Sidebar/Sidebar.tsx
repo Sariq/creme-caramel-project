@@ -1,27 +1,25 @@
 /*eslint-disable*/
-import React from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 import NotificationDropdown from "components/Dropdowns/NotificationDropdown.js";
 import UserDropdown from "components/Dropdowns/UserDropdown.js";
+import { useState } from "react";
 
 export default function Sidebar() {
-  const [collapseShow, setCollapseShow] = React.useState("hidden");
+  const [collapseShow, setCollapseShow] = useState("hidden");
   const navigate = useNavigate();
 
   const handleLogOut = () => {
-    axios
-    .get("http://localhost:1111/admin/logout")
-    .then(function (response) {
-      navigate('/')
+    axios.get("http://localhost:1111/admin/logout").then(function (response) {
+      navigate("/");
     });
   };
 
   return (
     <>
-      <nav className="md:left-0 md:block md:fixed md:top-0 md:bottom-0 md:overflow-y-auto md:flex-row md:flex-nowrap md:overflow-hidden shadow-xl bg-white flex flex-wrap items-center justify-between relative md:w-64 z-10 py-4 px-6">
+      <nav className="dir-rtl right-0 text-right md:block md:fixed md:top-0 md:bottom-0 md:overflow-y-auto md:flex-row md:flex-nowrap md:overflow-hidden shadow-xl bg-white flex flex-wrap items-center justify-between relative md:w-64 z-10 py-4 px-6">
         <div className="md:flex-col md:items-stretch md:min-h-full md:flex-nowrap px-0 flex flex-wrap items-center justify-between w-full mx-auto">
           {/* Toggler */}
           <button
@@ -33,24 +31,15 @@ export default function Sidebar() {
           </button>
           {/* Brand */}
           <Link
-            className="md:block text-left md:pb-2 text-blueGray-600 mr-0 inline-block whitespace-nowrap text-sm uppercase font-bold p-4 px-0"
+            className="md:block md:pb-2 text-blueGray-600 mr-0 inline-block whitespace-nowrap text-sm uppercase font-bold p-4 px-0"
             to="/"
           >
-            Notus React
+            <img className="h-12 m-auto" src="/creme-caramel-logo.png" />
           </Link>
-          {/* User */}
-          <ul className="md:hidden items-center flex flex-wrap list-none">
-            <li className="inline-block relative">
-              <NotificationDropdown />
-            </li>
-            <li className="inline-block relative">
-              <UserDropdown />
-            </li>
-          </ul>
           {/* Collapse */}
           <div
             className={
-              "md:flex md:flex-col md:items-stretch md:opacity-100 md:relative md:mt-4 md:shadow-none shadow absolute top-0 left-0 right-0 z-40 overflow-y-auto overflow-x-hidden h-auto items-center flex-1 rounded " +
+              "md:flex md:flex-col md:items-stretch md:opacity-100 md:relative md:shadow-none shadow absolute top-0 left-0 right-0 z-40 overflow-y-auto overflow-x-hidden h-auto items-center flex-1 rounded " +
               collapseShow
             }
           >
@@ -115,6 +104,28 @@ export default function Sidebar() {
                     }
                   ></i>{" "}
                   Dashboard
+                </Link>
+              </li>
+
+              <li className="items-center">
+                <Link
+                  className={
+                    "text-xs uppercase py-3 font-bold block " +
+                    (window.location.href.indexOf("/admin/categories") !== -1
+                      ? "text-lightBlue-500 hover:text-lightBlue-600"
+                      : "text-blueGray-700 hover:text-blueGray-500")
+                  }
+                  to="/admin/categories"
+                >
+                  <i
+                    className={
+                      "fas fa-tv mr-2 text-sm " +
+                      (window.location.href.indexOf("/admin/categories") !== -1
+                        ? "opacity-75"
+                        : "text-blueGray-300")
+                    }
+                  ></i>{" "}
+                  קטיגוריות
                 </Link>
               </li>
 
@@ -227,7 +238,7 @@ export default function Sidebar() {
               </li>
 
               <li onClick={handleLogOut} className="items-center ">
-                <div  className="text-blueGray-700 hover:text-blueGray-500 text-xs uppercase py-3 font-bold block">
+                <div className="text-blueGray-700 hover:text-blueGray-500 text-xs uppercase py-3 font-bold block">
                   <i className="fas fa-fingerprint text-blueGray-400 mr-2 text-sm"></i>{" "}
                   Login
                 </div>

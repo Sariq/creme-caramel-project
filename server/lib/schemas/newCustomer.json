@@ -6,23 +6,13 @@
             "type": "string",
             "isNotEmpty": true
         },
-        "address1": {
-            "type": "string",
-            "isNotEmpty": true
-        },
         "phone": {
-            "type": "string",
-            "isNotEmpty": true
-        },
-        "password": {
             "type": "string",
             "isNotEmpty": true
         }
     },
     "required": [
         "fullName",
-        "address1",
-        "phone",
-        "password"
+        "phone"
     ]
 }

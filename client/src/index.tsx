@@ -24,6 +24,8 @@ import Maps from "views/admin/Maps.js";
 import Settings from "views/admin/Settings.js";
 import Tables from "views/admin/Tables.js";
 import ProductsList from "views/admin/Products";
+import CategoriesList from "views/admin/categories";
+import ProductPage from "views/admin/product";
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
@@ -34,7 +36,11 @@ root.render(
       {/* add routes with layouts */}
       <Route path="/admin" element={<Admin />}>
         <Route path="/admin/dashboard" element={<Dashboard />} />
+        <Route path="/admin/categories" element={<CategoriesList />} />
+        <Route path="/admin/categories/:id" element={<ProductsList />} />
         <Route path="/admin/products" element={<ProductsList />} />
+        <Route path="/admin/product" element={<ProductPage />} />
+        <Route path="/admin/product/:id" element={<ProductPage />} />
         <Route path="/admin/maps" element={<Maps />} />
         <Route path="/admin/settings" element={<Settings />} />
         <Route path="/admin/tables" element={<Tables />} />
