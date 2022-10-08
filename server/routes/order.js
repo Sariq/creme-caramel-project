@@ -19,7 +19,7 @@ const { indexOrders } = require('../lib/indexing');
 const router = express.Router();
 
 // Show orders
-router.get('/admin/orders/:page?', restrict, async (req, res, next) => {
+router.get('/admin/orders/:page?', async (req, res, next) => {
     let pageNum = 1;
     if(req.params.page){
         pageNum = req.params.page;
@@ -29,26 +29,12 @@ router.get('/admin/orders/:page?', restrict, async (req, res, next) => {
     const orders = await paginateData(false, req, pageNum, 'orders', {}, { orderDate: -1 });
 
     // If API request, return json
-    if(req.apiAuthenticated){
+    // if(req.apiAuthenticated){
         res.status(200).json({
             orders
         });
         return;
-    }
-
-    res.render('orders', {
-        title: 'Cart',
-        orders: orders.data,
-        totalItemCount: orders.totalItems,
-        pageNum,
-        paginateUrl: 'admin/orders',
-        admin: true,
-        config: req.app.config,
-        session: req.session,
-        message: clearSessionValue(req.session, 'message'),
-        messageType: clearSessionValue(req.session, 'messageType'),
-        helpers: req.handlebars.helpers
-    });
+    // }
 });
 
 // Admin section
@@ -125,39 +111,14 @@ router.post('/admin/order/create', async (req, res, next) => {
     const db = req.app.db;
     const config = req.app.config;
 
-    // Check if cart is empty
-    if(!req.session.cart){
-        res.status(400).json({
-            message: 'The cart is empty. You will need to add items to the cart first.'
-        });
-    }
-
-    const orderDoc = {
-        orderPaymentId: getId(),
-        orderPaymentGateway: 'Instore',
-        orderPaymentMessage: 'Your payment was successfully completed',
-        orderTotal: req.session.totalCartAmount,
-        orderShipping: req.session.totalCartShipping,
-        orderItemCount: req.session.totalCartItems,
-        orderProductCount: req.session.totalCartProducts,
-        orderCustomer: getId(req.session.customerId),
-        orderEmail: sanitize(req.body.email || req.session.customerEmail),
-        orderCompany: sanitize(req.body.company || req.session.customerCompany),
-        orderFirstname: sanitize(req.body.firstName || req.session.customerFirstname),
-        orderLastname: sanitize(req.body.lastName || req.session.customerLastname),
-        orderAddr1: sanitize(req.body.address1 || req.session.customerAddress1),
-        orderAddr2: sanitize(req.body.address2 || req.session.customerAddress2),
-        orderCountry: sanitize(req.body.country || req.session.customerCountry),
-        orderState: sanitize(req.body.state || req.session.customerState),
-        orderPostcode: sanitize(req.body.postcode || req.session.customerPostcode),
-        orderPhoneNumber: sanitize(req.body.phone || req.session.customerPhone),
-        orderComment: sanitize(req.body.orderComment || req.session.orderComment),
-        orderStatus: sanitize(req.body.orderStatus),
-        orderDate: new Date(),
-        orderProducts: req.session.cart,
-        orderType: 'Single'
-    };
-
+    // // Check if cart is empty
+    // if(!req.session.cart){
+    //     res.status(400).json({
+    //         message: 'The cart is empty. You will need to add items to the cart first.'
+    //     });
+    // }
+    const orderDoc = {...req.body}
+    console.log(orderDoc)
     // insert order into DB
     try{
         const newDoc = await db.orders.insertOne(orderDoc);
@@ -168,34 +129,10 @@ router.post('/admin/order/create', async (req, res, next) => {
         // add to lunr index
         indexOrders(req.app)
         .then(() => {
-            // set the results
-            req.session.messageType = 'success';
-            req.session.message = 'Your order was successfully placed. Payment for your order will be completed instore.';
-            req.session.paymentEmailAddr = newDoc.ops[0].orderEmail;
-            req.session.paymentApproved = true;
-            req.session.paymentDetails = `<p><strong>Order ID: </strong>${orderId}</p>
-            <p><strong>Transaction ID: </strong>${orderDoc.orderPaymentId}</p>`;
-
-            // set payment results for email
-            const paymentResults = {
-                message: req.session.message,
-                messageType: req.session.messageType,
-                paymentEmailAddr: req.session.paymentEmailAddr,
-                paymentApproved: true,
-                paymentDetails: req.session.paymentDetails
-            };
-
-            // clear the cart
-            if(req.session.cart){
-                emptyCart(req, res, 'function');
-            }
-
-            // Clear customer session
-            clearCustomer(req);
-
+          
             // send the email with the response
             // TODO: Should fix this to properly handle result
-            sendEmail(req.session.paymentEmailAddr, `Your order with ${config.cartTitle}`, getEmailTemplate(paymentResults));
+            //sendEmail(req.session.paymentEmailAddr, `Your order with ${config.cartTitle}`, getEmailTemplate(paymentResults));
 
             // redirect to outcome
             res.status(200).json({
@@ -204,6 +141,7 @@ router.post('/admin/order/create', async (req, res, next) => {
             });
         });
     }catch(ex){
+        console.log(ex)
         res.status(400).json({ err: 'Your order declined. Please try again' });
     }
 });

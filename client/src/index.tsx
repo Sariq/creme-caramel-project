@@ -26,6 +26,7 @@ import Tables from "views/admin/Tables.js";
 import ProductsList from "views/admin/Products";
 import CategoriesList from "views/admin/categories";
 import ProductPage from "views/admin/product";
+import OrderdsPage from "views/admin/orders";
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
@@ -41,6 +42,7 @@ root.render(
         <Route path="/admin/products" element={<ProductsList />} />
         <Route path="/admin/product" element={<ProductPage />} />
         <Route path="/admin/product/:id" element={<ProductPage />} />
+        <Route path="/admin/orders" element={<OrderdsPage />} />
         <Route path="/admin/maps" element={<Maps />} />
         <Route path="/admin/settings" element={<Settings />} />
         <Route path="/admin/tables" element={<Tables />} />

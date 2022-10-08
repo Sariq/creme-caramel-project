@@ -149,21 +149,4 @@ export default function ProductsList() {
       </div>
     </div>
   );
-  // const productList: any[] = require("../../mocks/products.json");
-  // console.log(productList)
-  // return (
-  //   <>
-  //     <div className="flex flex-wrap justify-center relative">
-  //       <div className="w-full lg:w-8/12 px-4">
-  //         <div className="">
-  //           {productList.map((product) => (
-  //             <div>{product.name}</div>
-  //           ))}
-  //         </div>
-  //         <ProductItem/>
-  //         <CardSettings />
-  //       </div>
-  //     </div>
-  //   </>
-  // );
 }

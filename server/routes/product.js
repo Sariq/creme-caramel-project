@@ -109,7 +109,7 @@ router.get("/admin/product/new", restrict, checkAccess, (req, res) => {
 // insert new product form action
 router.post("/admin/product/insert", async (req, res) => {
   const db = req.app.db;
-  console.log(req.body);
+
   const doc = {
     name: req.body.name,
     img: cleanHtml(req.body.img),
