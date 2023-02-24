@@ -5,6 +5,8 @@ export type TOrderItem = {
     comment: string;
 }
 export type TOrder = {
+    id?: string;
+    _id?: string;
     customerName: string;
     customerPhone: number;
     productsCount: number;

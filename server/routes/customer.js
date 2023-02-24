@@ -92,7 +92,7 @@ router.post("/customer/create", async (req, res) => {
   const customer = await db.customers.findOne({ phone: req.body.phone });
   if (customer) {
     res.status(400).json({
-      message: "A customer already exists with that email address",
+      message: "A customer already exists with that phone number",
     });
     return;
   }
@@ -162,29 +162,15 @@ router.post("/customer/save", async (req, res) => {
 // Get customer orders
 router.get("/customer/account", async (req, res) => {
   const db = req.app.db;
-  const config = req.app.config;
-
-  if (!req.session.customerPresent) {
-    res.redirect("/customer/login");
-    return;
-  }
-
   const orders = await db.orders
     .find({
       orderCustomer: getId(req.session.customerId),
     })
     .sort({ orderDate: -1 })
     .toArray();
-  res.render(`${config.themeViews}customer-account`, {
-    title: "Orders",
-    session: req.session,
-    orders,
-    message: clearSessionValue(req.session, "message"),
-    messageType: clearSessionValue(req.session, "messageType"),
-    countryList: getCountryList(),
-    config: req.app.config,
-    helpers: req.handlebars.helpers,
-  });
+
+  res.status(200).json(orders);
+
 });
 
 // Update a customer

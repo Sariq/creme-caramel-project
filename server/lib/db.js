@@ -26,6 +26,7 @@ function initDb(dbUrl, callback){ // eslint-disable-line
 
         // setup the collections
         db.users = db.collection('users');
+        db.categories = db.collection('categories');
         db.products = db.collection('products');
         db.variants = db.collection('variants');
         db.orders = db.collection('orders');

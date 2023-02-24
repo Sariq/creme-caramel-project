@@ -5,15 +5,22 @@ import OrderCard from "components/Cards/CardOrder";
 
 const OrderdsPage = () => {
   const [ordersList, setOrderList] = useState([]);
-  useEffect(() => {
+
+  const handleGetOrdersList = () => {
     getOrdersListApi(1).then((res) => {
-      console.log(res.data);
-      setOrderList(res.data);
-    });
+        setOrderList(res.data);
+      });
+
+  };
+
+  useEffect(() => {
+    setInterval(()=>{handleGetOrdersList()}, 1000);
+
+   
   },[]);
   return (
     <div>
-      {ordersList?.map((order) => (
+      {ordersList.reverse()?.map((order) => (
         <OrderCard order={order} />
       ))}
     </div>

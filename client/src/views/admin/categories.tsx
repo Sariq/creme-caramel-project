@@ -1,16 +1,29 @@
+import getCategoriesListApi from "apis/admin/category/get-categories";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { TCategory } from "shared/types/category";
 
 export default function CategoriesList() {
-  const CategorytList: any[] = require("../../mocks/CategoryMock.json");
+  const [categorytList, setCategorytList] = useState<TCategory[]>([]);
+  useEffect(() => {
+    getCategoriesListApi().then((res)=>{
+     console.log(res)
+     setCategorytList(res);
+   })
+  }, []);
+
+  if(!categorytList){
+    return null;
+  }
   return (
        <div className="flex flex-wrap justify-center relative">
      <div className="w-full px-4">
       <h1 className="text-4xl m-auto w-fit">קטגוריות</h1>
       <div className="flex gap-5 flex-wrap mt-10 -mx-1 lg:-mx-4">
-        {CategorytList.map((category) => (
+        {categorytList.map((category) => (
           <Link
             className="my-1 px-1 transition duration-500 hover:scale-105"
-            to={`${category.id}`}
+            to={`${category?._id}`}
           >
             <div>
               <article className="overflow-hidden rounded-lg shadow-lg">

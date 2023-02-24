@@ -1,10 +1,5 @@
 import React from "react";
 
-export type TCategory = {
-    name: string;
-    img: string;
-    count: number;
-};
 
 const CategoryCard = () => {
     const categoryList: any[] = require("../../mocks/CategoryMock.json");

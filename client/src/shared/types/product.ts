@@ -6,9 +6,3 @@ export type TProduct = {
     description?: string;
     price?: number;
 };
-
-export type TCategory = {
-    id: string;
-    name: string;
-    img: string;
-};

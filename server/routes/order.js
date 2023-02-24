@@ -19,7 +19,7 @@ const { indexOrders } = require('../lib/indexing');
 const router = express.Router();
 
 // Show orders
-router.get('/admin/orders/:page?', async (req, res, next) => {
+router.get('/api/order/admin/orders/:page?', async (req, res, next) => {
     let pageNum = 1;
     if(req.params.page){
         pageNum = req.params.page;
@@ -107,7 +107,7 @@ router.get('/admin/order/create', restrict, async (req, res) => {
     });
 });
 
-router.post('/admin/order/create', async (req, res, next) => {
+router.post('/api/order/create', async (req, res, next) => {
     const db = req.app.db;
     const config = req.app.config;
 
@@ -118,7 +118,7 @@ router.post('/admin/order/create', async (req, res, next) => {
     //     });
     // }
     const orderDoc = {...req.body}
-    console.log(orderDoc)
+    console.log("orderDoc",orderDoc)
     // insert order into DB
     try{
         const newDoc = await db.orders.insertOne(orderDoc);
@@ -182,7 +182,7 @@ router.get('/admin/orders/filter/:search', restrict, async (req, res, next) => {
 });
 
 // order product
-router.get('/admin/order/delete/:id', restrict, async(req, res) => {
+router.get('/admin/order/delete/:id', async(req, res) => {
     const db = req.app.db;
 
     // remove the order
@@ -192,31 +192,18 @@ router.get('/admin/order/delete/:id', restrict, async(req, res) => {
         // remove the index
         indexOrders(req.app)
         .then(() => {
-            if(req.apiAuthenticated){
                 res.status(200).json({
                     message: 'Order successfully deleted'
                 });
                 return;
-            }
-
-            // redirect home
-            req.session.message = 'Order successfully deleted';
-            req.session.messageType = 'success';
-            res.redirect('/admin/orders');
         });
     }catch(ex){
         console.log('Cannot delete order', ex);
-        if(req.apiAuthenticated){
             res.status(200).json({
                 message: 'Error deleting order'
             });
             return;
-        }
 
-        // redirect home
-        req.session.message = 'Error deleting order';
-        req.session.messageType = 'danger';
-        res.redirect('/admin/orders');
     }
 });
 

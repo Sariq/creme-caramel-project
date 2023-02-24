@@ -5,44 +5,80 @@ import { useNavigate } from "react-router-dom";
 // components
 import { useEffect, useState } from "react";
 import clsx from "clsx";
+import getProductsListApi from "apis/admin/product/get-products-list";
+import deleteProductApi from "apis/admin/product/delete-product";
+import getProductsByCategoryIdApi from "apis/admin/product/get-products-by-category-id";
+import { CategoryConsts, CategoryEnum } from "shared/constants";
 
-const iconClass = "text-white p-3 text-center inline-flex items-center justify-center w-12 h-12 shadow-lg rounded-full";
+const iconClass =
+  "text-white p-3 text-center inline-flex items-center justify-center w-12 h-12 shadow-lg rounded-full";
 export default function ProductsList() {
-  const params = useParams();
+  const params = useParams<any>();
   const navigate = useNavigate();
 
   const [productsList, setProductsList] = useState<any>();
   const [isDeleteActive, setIsdeleteActive] = useState(false);
   const [deleteList, setDeleteList] = useState<any>([]);
+  // if(params.id){
 
+  //   const categoryName= CategoryConsts[CategoryEnum.cheeseCake];
+  // }
+  const getProductsList = () => {
+    getProductsListApi(1).then((res) => {
+      setProductsList(res);
+    });
+  };
   useEffect(() => {
-    const productsListMock: any[] = require("../../mocks/products.json");
-    const productsListFiltered = productsListMock.filter(
-      (product) => product.categoryId === params.id
-    );
-    setProductsList(productsListFiltered);
+    if (params.id) {
+      // setInterval(() => {
+        getProductsByCategoryIdApi((params.id), 1).then((res) => {
+          setProductsList(res);
+        });
+    //   }, 1000);
+    // } else {
+    //   setInterval(() => {
+    //     getProductsList();
+    //   }, 1000);
+    }
   }, []);
+
+  const getCategoryName = () => {
+    if (params.id) {
+      switch (params.id) {
+        case "1":
+          return CategoryConsts[ CategoryEnum.cheeseCake]
+        case "2":
+          return CategoryConsts[ CategoryEnum.chockolateCate]
+        case "3":
+          return CategoryConsts[ CategoryEnum.uniqueCake]
+        case "4":
+          return CategoryConsts[ CategoryEnum.birthdayCake]
+      }
+    }
+  };
 
   const handleProductClick = (e: any, product: any) => {
     if (isDeleteActive) {
       e.preventDefault();
       if (isInDeleteList(product)) {
         const updatedDeleteList = deleteList.filter(
-          (id: any) => id !== product.id
+          (id: any) => id !== product._id
         );
         setDeleteList(updatedDeleteList);
       } else {
-        setDeleteList([...deleteList, product.id]);
+        setDeleteList([...deleteList, product._id]);
       }
     }
   };
 
   const isInDeleteList = (product: any) => {
-    return deleteList.indexOf(product.id) > -1;
+    return deleteList.indexOf(product._id) > -1;
   };
 
   const deleteSelectedItems = () => {
-   //TODO : call delete products api
+    setIsdeleteActive(false);
+    deleteProductApi(deleteList);
+    //TODO : call delete products api
   };
 
   const handleDeleteItemsClick = () => {
@@ -53,7 +89,7 @@ export default function ProductsList() {
   };
 
   const handleAddNewClick = () => {
-    navigate('/admin/product')
+    navigate("/admin/product");
   };
 
   if (!productsList) {
@@ -70,14 +106,12 @@ export default function ProductsList() {
           )}
         >
           <div
-          onClick={deleteSelectedItems}
+            onClick={deleteSelectedItems}
             role="button"
             className={clsx(
               "bg-orange-600 disabled",
               iconClass,
-              isDeleteActive
-                ? "visible"
-                : "invisible",
+              isDeleteActive ? "visible" : "invisible",
               deleteList.length === 0
                 ? "opacity-30 pointer-events-none"
                 : "opacity-100 pointer-events-auto"
@@ -85,7 +119,7 @@ export default function ProductsList() {
           >
             <i className="fas fa-check"></i>
           </div>
-          <h1 className="text-4xl m-auto w-fit">עוגות</h1>
+          <h1 className="text-4xl m-auto w-fit">{getCategoryName()}</h1>
           <div className="flex gap-3">
             <div
               role="button"
@@ -120,7 +154,7 @@ export default function ProductsList() {
                 handleProductClick(e, product);
               }}
               className={clsx("my-1 transition duration-500 hover:scale-105")}
-              to={`/admin/product/${product.id}`}
+              to={`/admin/product/${product._id}`}
             >
               <div>
                 <article className="overflow-hidden rounded-lg shadow-lg">

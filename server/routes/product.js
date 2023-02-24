@@ -18,12 +18,12 @@ const fs = require("fs");
 const path = require("path");
 const router = express.Router();
 
-router.get("/admin/products/:page?", restrict, async (req, res, next) => {
+router.get("/admin/products/:page?", async (req, res, next) => {
   let pageNum = 1;
   if (req.params.page) {
     pageNum = req.params.page;
   }
-
+console.log("xx")
   // Get our paginated data
   const products = await paginateData(
     false,
@@ -34,21 +34,25 @@ router.get("/admin/products/:page?", restrict, async (req, res, next) => {
     { productAddedDate: -1 }
   );
   res.status(200).json(products.data);
-  // res.render('products', {
-  //     title: 'Cart - Products',
-  //     results: products.data,
-  //     totalItemCount: products.totalItems,
-  //     pageNum,
-  //     paginateUrl: 'admin/products',
-  //     resultType: 'top',
-  //     session: req.session,
-  //     admin: true,
-  //     config: req.app.config,
-  //     message: clearSessionValue(req.session, 'message'),
-  //     messageType: clearSessionValue(req.session, 'messageType'),
-  //     helpers: req.handlebars.helpers
-  // });
 });
+
+router.get("/admin/products/category/:id/:page?", async (req, res, next) => {
+    let pageNum = 1;
+    if (req.params.page) {
+      pageNum = req.params.page;
+    }
+  
+    // Get our paginated data
+    const products = await paginateData(
+      false,
+      req,
+      pageNum,
+      "products",
+      {categoryId: req.params.id},
+      { productAddedDate: -1 }
+    );
+    res.status(200).json(products.data);
+  });
 
 router.get(
   "/admin/products/filter/:search",
@@ -107,10 +111,11 @@ router.get("/admin/product/new", restrict, checkAccess, (req, res) => {
 });
 
 // insert new product form action
-router.post("/admin/product/insert", async (req, res) => {
+router.post("/admin/product/insert", async (req, res, next) => {
   const db = req.app.db;
-
-  const doc = {
+  const orderDoc = {...req.body}
+  console.log(orderDoc)
+    const doc = {
     name: req.body.name,
     img: cleanHtml(req.body.img),
     categoryId: req.body.categoryId,
@@ -157,7 +162,7 @@ router.post("/admin/product/insert", async (req, res) => {
   }
 });
 
-// render the editor
+// get product by id
 router.get("/admin/product/:id", async (req, res) => {
   const db = req.app.db;
 
@@ -176,6 +181,25 @@ router.get("/admin/product/:id", async (req, res) => {
   res.status(200).json(product);
   return;
 });
+
+router.get("/admin/:categoryId/product", async (req, res) => {
+    const db = req.app.db;
+  
+    const product = await db.products.findOne({ categoryId: getId(req.params.categoryId) });
+    if (!product) {
+      // If API request, return json
+      if (req.apiAuthenticated) {
+        res.status(400).json({ message: "Product not found" });
+        return;
+      }
+      return;
+    }
+  
+    // If API request, return json
+  
+    res.status(200).json(product);
+    return;
+  });
 
 // render the editor
 router.get(
@@ -457,29 +481,32 @@ router.post(
 // delete a product
 router.post(
   "/admin/product/delete",
-  restrict,
-  checkAccess,
   async (req, res) => {
     const db = req.app.db;
-
+    const objectIdsList = req.body.productsIdsList.map((id)=> {
+   
+        return getId(id)
+    });
+    console.log(objectIdsList)
     // remove the product
-    await db.products.deleteOne({ _id: getId(req.body.productId) }, {});
+    await db.products.deleteMany({ _id: {$in: objectIdsList} }, {});
+    //await db.products.deleteOne({ _id: getId(req.body.productId) }, {});
 
     // Remove the variants
-    await db.variants.deleteMany({ product: getId(req.body.productId) }, {});
+    //await db.variants.deleteMany({ product: getId(req.body.productId) }, {});
 
     // delete any images and folder
-    rimraf(`public/uploads/${req.body.productId}`, (err) => {
-      if (err) {
-        console.info(err.stack);
-        res.status(400).json({ message: "Failed to delete product" });
-      }
+    // rimraf(`public/uploads/${req.body.productId}`, (err) => {
+    //   if (err) {
+    //     console.info(err.stack);
+    //     res.status(400).json({ message: "Failed to delete product" });
+    //   }
 
       // re-index products
       indexProducts(req.app).then(() => {
         res.status(200).json({ message: "Product successfully deleted" });
       });
-    });
+    // });
   }
 );
 

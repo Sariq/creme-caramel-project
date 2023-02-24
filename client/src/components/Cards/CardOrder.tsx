@@ -1,17 +1,25 @@
+import deleteOrderApi from "apis/admin/order/delete-order";
+import clsx from "clsx";
 import { TOrder, TOrderItem } from "shared/types/order";
 
 type TProps = {
   order: TOrder;
 };
+const iconClass =
+  "text-white p-3 text-center inline-flex items-center justify-center w-12 h-12 shadow-lg rounded-full";
 
-const orderLabelClass = "border-x-2 px-1 text-sm border-blueGray-300 text-center";
+const orderLabelClass =
+  "border-x-2 px-1 text-sm border-blueGray-300 text-center";
 const productThClass =
   "px-6 align-middle border border-solid py-3 text-lg uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-right bg-blueGray-50 text-blueGray-500 border-blueGray-900";
 const productTDClass =
   "border-t-0 px-6 align-middle border-l-0 border-r-0 whitespace-nowrap p-4 items-center";
 
 const OrderCard = ({ order }: TProps) => {
-  console.log(order);
+  const handleOrderCompleteClick = () => {
+      console.log(order._id)
+    order._id && deleteOrderApi(order._id);
+  };
   return (
     <>
       <div className="relative flex flex-col min-w-0 break-words w-full mb-6 shadow-lg rounded bg-white">
@@ -66,6 +74,22 @@ const OrderCard = ({ order }: TProps) => {
               ))}
             </tbody>
           </table>
+          <div className="px-4 py-3 flex items-center gap-8 align-middle border border-solid py-2 uppercase border-l-0 border-r-0 font-semibold text-right bg-gray-600 text-blueGray-500 border-blueGray-100">
+            <div
+              role="button"
+              onClick={handleOrderCompleteClick}
+              className={clsx(iconClass, "bg-green-600")}
+            >
+              <i className={clsx("fa fa-check")}></i>
+            </div>
+            {/* <div
+              role="button"
+              onClick={handleOrderCompleteClick}
+              className={clsx(iconClass, "bg-red-600")}
+            >
+              <i className={clsx("fa fa-trash")}></i>
+            </div> */}
+          </div>
         </div>
       </div>
     </>

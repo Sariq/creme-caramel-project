@@ -32,7 +32,7 @@ const paginateData = (frontend, req, page, collection, query, sort) => {
 
     // Run our queries
     return Promise.all([
-        db[collection].find(query).skip(skip).limit(parseInt(numberItems)).sort(sort).toArray(),
+        db[collection].find(query).sort(sort).toArray(),
         db[collection].countDocuments(query)
     ])
     .then((result) => {
@@ -53,6 +53,7 @@ const paginateData = (frontend, req, page, collection, query, sort) => {
  * @param  {object} sort // The mongo sort
  */
 const paginateProducts = (frontend, db, page, query, sort) => {
+    console.log("Xxxx")
     const config = getConfig();
     let numberItems = 10;
     if(frontend){
@@ -83,10 +84,11 @@ const paginateProducts = (frontend, db, page, query, sort) => {
                     as: 'variants'
                 }
             }
-        ]).sort(sort).skip(skip).limit(parseInt(numberItems)).toArray(),
+        ]).sort(sort),
         db.products.countDocuments(query)
     ])
     .then((result) => {
+        console.log(result)
         const returnData = { data: result[0], totalItems: result[1] };
         return returnData;
     })

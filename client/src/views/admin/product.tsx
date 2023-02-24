@@ -3,16 +3,22 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { TProduct } from "shared/types/product";
 
+/*consts*/
+import { CategoryEnum, CategoryConsts } from "shared/constants";
+
 /* api */
 import addNewProductApi from "apis/admin/product/add-new-product";
 import uploadImage from "apis/admin/product/upload-image";
 import getProductApi from "apis/admin/product/get-product";
+import getCategoriesListApi from "apis/admin/category/get-categories";
+import { TCategory } from "shared/types/category";
 
 const iconClass =
   "text-white p-3 text-center inline-flex items-center justify-center w-12 h-12 shadow-lg rounded-full";
 const inputClass =
   "border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 rounded  shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150";
-const inputLabelClass = "block text-lg uppercase text-blueGray-600 font-bold mb-2";
+const inputLabelClass =
+  "block text-lg uppercase text-blueGray-600 font-bold mb-2";
 
 const formModes = {
   preview: 1,
@@ -20,7 +26,6 @@ const formModes = {
   addNew: 3,
 };
 const ProductPage = () => {
-  const productsListMock: any[] = require("../../mocks/products.json");
   const params = useParams();
   const [selectedProduct, setSelectedProduct] = useState<TProduct>();
   const [isDisabled, setIsDisabled] = useState<boolean>(false);
@@ -29,13 +34,18 @@ const ProductPage = () => {
   const [isLoading, setIsLoading] = useState<boolean>();
   const navigate = useNavigate();
 
+  const [categorytList, setCategorytList] = useState<TCategory[]>([]);
+  useEffect(() => {
+    getCategoriesListApi().then((res) => {
+      console.log(res);
+      setCategorytList(res);
+    });
+  }, []);
+
   useEffect(() => {
     if (params.id === undefined) {
       setFormMode(formModes.addNew);
     } else {
-      // const product = productsListMock.find(
-      //   (product) => product.id === params.id
-      // );
       getProductApi(params.id).then((res) => {
         setSelectedProduct(res);
         setFormMode(formModes.preview);
@@ -220,13 +230,21 @@ const ProductPage = () => {
                   <label className={inputLabelClass} htmlFor="grid-password">
                     קטגוריה
                   </label>
-                  <input
+                  <select
                     name="categoryId"
-                    type="text"
-                    className={clsx(inputClass, getInputClass())}
-                    defaultValue={selectedProduct?.categoryId}
+                    className={clsx("pr-12", inputClass, getInputClass())}
+                    value={selectedProduct?.categoryId}
                     onChange={handleInputChange}
-                  />
+                  >
+                    <option value="" selected disabled hidden>
+                      בחר קטיגוריה
+                    </option>
+                    {categorytList?.map((category) => (
+                      <option value={category?._id}>
+                        <span>{category?.name}</span>
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
               <div className="w-full lg:w-6/12 px-4">
@@ -295,9 +313,7 @@ const ProductPage = () => {
                             ></path>
                           </svg>
                           <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
-                            <span className="font-semibold">
-                              בחר תמונה
-                            </span>{" "}
+                            <span className="font-semibold">בחר תמונה</span>{" "}
                           </p>
                         </div>
                         <input
