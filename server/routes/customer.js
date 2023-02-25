@@ -88,6 +88,7 @@ router.post("/api/customer/create", async (req, res) => {
   // send code sms
   const customerObj = {
     phone: sanitize(req.body.phone),
+    authCode: random4DigitsCode,
     created: new Date(),
   };
 
@@ -118,18 +119,18 @@ router.post("/api/customer/create", async (req, res) => {
     const newCustomer = await db.customers.insertOne(customerObj);
     indexCustomers(req.app).then(() => {
       // Return the new customer
-      const customerReturn = newCustomer.ops[0];
-      delete customerReturn.password;
+      // const customerReturn = newCustomer.ops[0];
+      // delete customerReturn.password;
 
-      // Set the customer into the session
-      req.session.customerPresent = true;
-      req.session.customerId = customerReturn._id;
-      req.session.customerFullName = customerReturn.fullName;
-      req.session.customerAddress1 = customerReturn.address1;
-      req.session.customerPhone = customerReturn.phone;
+      // // Set the customer into the session
+      // req.session.customerPresent = true;
+      // req.session.customerId = customerReturn._id;
+      // req.session.customerFullName = customerReturn.fullName;
+      // req.session.customerAddress1 = customerReturn.address1;
+      // req.session.customerPhone = customerReturn.phone;
 
-      // Return customer oject
-      res.status(200).json(customerReturn);
+      // // Return customer oject
+      res.status(200).json(customerObj);
     });
   } catch (ex) {
     console.error(colors.red("Failed to insert customer: ", ex));
@@ -212,22 +213,26 @@ router.get("/api/customer/orders", auth.required, async (req, res) => {
       });
       return;
     }
+    if(customer.orders){
+      var ids = customer.orders;
+    
+      var oids = [];
+      ids.forEach(function (item) {
+        oids.push(getId(item));
+      });
+  
+      const orders = await db.orders
+        .find({
+          _id: { $in: oids },
+        })
+        .sort({ orderDate: -1 })
+        .toArray();
+        res.status(200).json(orders);
+    }else{
+      res.status(200).json([]);
+    }
 
-    var ids = customer.orders;
 
-    var oids = [];
-    ids.forEach(function (item) {
-      oids.push(getId(item));
-    });
-
-    const orders = await db.orders
-      .find({
-        _id: { $in: oids },
-      })
-      .sort({ orderDate: -1 })
-      .toArray();
-
-    res.status(200).json(orders);
   } catch (ex) {
     console.error(colors.red(`Failed get customer: ${ex}`));
     res.status(400).json({ message: "Failed to get customer" });
@@ -260,7 +265,7 @@ router.get("/api/customer/details", auth.required, async (req, res) => {
     }
     res.status(200).json({
       message: "Customer updated",
-      data: { phone: customer.phone, fullName: customer.fullName },
+      data: { phone: customer.phone, fullName: customer.fullName, isAdmin: customer.isAdmin },
     });
   } catch (ex) {
     console.error(colors.red(`Failed get customer: ${ex}`));
