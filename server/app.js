@@ -23,6 +23,7 @@ const { initDb, getDbUri } = require('./lib/db');
 const { writeGoogleData } = require('./lib/googledata');
 let handlebars = require('express-handlebars');
 const cors = require('cors');
+require('./config/passport');
 
 // Validate our settings schema
 const Ajv = require('ajv');
@@ -59,6 +60,7 @@ app.set('port', process.env.PORT || 1111);
 app.use(logger('dev'));
 app.use(express.urlencoded({ extended: false }));
 app.use(cors());
+app.use(session({ secret: 'passport-tutorial', cookie: { maxAge: 60000 }, resave: false, saveUninitialized: false }));
 
 app.use(express.json({}));
 
@@ -100,18 +102,15 @@ app.use((req, res, next) => {
 // will print stacktrace
 if(app.get('env') === 'development'){
     app.use((err, req, res, next) => {
-        console.error(colors.red(err.stack));
-        if(err && err.code === 'EACCES'){
-            res.status(400).json({ message: 'File upload error. Please try again.' });
-            return;
-        }
         res.status(err.status || 500);
-        res.render('error', {
+    
+        res.json({
+          errors: {
             message: err.message,
             error: err,
-            helpers: handlebars.helpers
+          },
         });
-    });
+      });
 }
 
 // production error handler
@@ -123,11 +122,12 @@ app.use((err, req, res, next) => {
         return;
     }
     res.status(err.status || 500);
-    res.render('error', {
-        message: err.message,
-        error: {},
-        helpers: handlebars.helpers
-    });
+    res.json({
+        errors: {
+          message: err.message,
+          error: {},
+        },
+      });
 });
 
 // Nodejs version check

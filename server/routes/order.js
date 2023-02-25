@@ -1,4 +1,6 @@
 const express = require('express');
+const auth = require('./auth');
+
 const {
     clearSessionValue,
     getCountryList,
@@ -19,7 +21,7 @@ const { indexOrders } = require('../lib/indexing');
 const router = express.Router();
 
 // Show orders
-router.get('/api/order/admin/orders/:page?', async (req, res, next) => {
+router.get('/api/order/admin/orders/:page?', auth.required, async (req, res, next) => {
     let pageNum = 1;
     if(req.params.page){
         pageNum = req.params.page;
@@ -107,7 +109,8 @@ router.get('/admin/order/create', restrict, async (req, res) => {
     });
 });
 
-router.post('/api/order/create', async (req, res, next) => {
+router.post('/api/order/create', auth.required, async (req, res, next) => {
+    const customerId = req.auth.id;
     const db = req.app.db;
     const config = req.app.config;
 
@@ -117,7 +120,7 @@ router.post('/api/order/create', async (req, res, next) => {
     //         message: 'The cart is empty. You will need to add items to the cart first.'
     //     });
     // }
-    const orderDoc = {...req.body}
+    const orderDoc = {...req.body, created: new Date(),}
     console.log("orderDoc",orderDoc)
     // insert order into DB
     try{
@@ -125,7 +128,22 @@ router.post('/api/order/create', async (req, res, next) => {
 
         // get the new ID
         const orderId = newDoc.insertedId;
-
+        const customer = await db.customers.findOne({
+            _id: getId(customerId),
+          });
+          if (!customer) {
+            res.status(400).json({
+              message: "Customer not found",
+            });
+            return;
+          }
+          const updatedCustomer = await db.customers.findOneAndUpdate(
+            { _id: getId(customerId) },
+            {
+              $set: { ...customer, orders: customer.orders ? [...customer.orders, orderId] : [orderId] },
+            },
+            { multi: false, returnOriginal: false }
+          );
         // add to lunr index
         indexOrders(req.app)
         .then(() => {

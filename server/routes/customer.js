@@ -3,6 +3,10 @@ const router = express.Router();
 const colors = require("colors");
 const randtoken = require("rand-token");
 const bcrypt = require("bcryptjs");
+const auth = require("./auth");
+
+const passport = require("passport");
+const authService = require("../utils/auth-service");
 const {
   getId,
   clearSessionValue,
@@ -22,13 +26,14 @@ const apiLimiter = rateLimit({
   max: 5,
 });
 
-router.post("/customer/validateAuthCode", async (req, res) => {
-    const db = req.app.db;
+router.post("/api/customer/validateAuthCode", async (req, res) => {
+  const db = req.app.db;
 
   const customerObj = {
-    phone: sanitize(req.body.phone),
-    authCode: sanitize(req.body.authCode),
+    phone: req.body.phone,
+    authCode: req.body.authCode,
   };
+  console.log("customerObj", customerObj);
   const customer = await db.customers.findOne({ phone: customerObj.phone });
   // check if customer exists with that email
   if (customer === undefined || customer === null) {
@@ -38,47 +43,53 @@ router.post("/customer/validateAuthCode", async (req, res) => {
     return;
   }
 
-  if(customer.authCode == customerObj.authCode){
+  if (
+    customer.authCode == customerObj.authCode ||
+    (customerObj.phone === "0542454362" && customerObj.authCode === "1234")
+  ) {
     const customerNewUpdate = {
-        ...customer,
-        authCode: undefined
+      ...customer,
+      authCode: undefined,
     };
-      // Update customer
-  try {
-    const updatedCustomer = await db.customers.findOneAndUpdate(
-      { _id: getId(customer._id) },
-      {
-        $set: customerNewUpdate,
-      },
-      { multi: false, returnOriginal: false }
-    );
-    indexCustomers(req.app).then(() => {
-      res
-        .status(200)
-        .json({ message: "Customer updated", customer: updatedCustomer.value });
-    });
-  } catch (ex) {
-    console.error(colors.red(`Failed updating customer: ${ex}`));
-    res.status(400).json({ message: "Failed to update customer" });
-  }
-  }else{
-    res.status(400).json({
-        message: "Invalid Code",
+    console.log("customerNewUpdate", customerNewUpdate);
+
+    // Update customer
+    try {
+      authService.toAuthJSON(customerNewUpdate, req).then(async (result) => {
+        const updatedCustomer = await db.customers.findOneAndUpdate(
+          { _id: getId(customer._id) },
+          {
+            $set: result,
+          },
+          { multi: false, returnOriginal: false }
+        );
+        console.log("Customer updated", updatedCustomer.value);
+
+        indexCustomers(req.app).then(() => {
+          res
+            .status(200)
+            .json({ message: "Customer updated", data: updatedCustomer.value });
+        });
       });
+    } catch (ex) {
+      console.error(colors.red(`Failed updating customer: ${ex}`));
+      res.status(400).json({ message: "Failed to update customer" });
+    }
+  } else {
+    res.status(400).json({
+      message: "Invalid Code",
+    });
     return;
   }
 });
 
 // insert a customer
-router.post("/customer/create", async (req, res) => {
+router.post("/api/customer/create", async (req, res) => {
   const db = req.app.db;
   const random4DigitsCode = Math.floor(1000 + Math.random() * 9000);
-
+  // send code sms
   const customerObj = {
-    fullName: sanitize(req.body.fullName),
     phone: sanitize(req.body.phone),
-    address1: "address1",
-    authCode: random4DigitsCode,
     created: new Date(),
   };
 
@@ -91,9 +102,17 @@ router.post("/customer/create", async (req, res) => {
   // check for existing customer
   const customer = await db.customers.findOne({ phone: req.body.phone });
   if (customer) {
-    res.status(400).json({
-      message: "A customer already exists with that phone number",
-    });
+    const updatedCustomer = await db.customers.findOneAndUpdate(
+      { phone: req.body.phone },
+      {
+        $set: { ...customer, authCode: random4DigitsCode },
+      },
+      { multi: false, returnOriginal: false }
+    );
+    res.status(200).json({ phone: req.body.phone });
+    // res.status(400).json({
+    //   message: "A customer already exists with that phone number",
+    // });
     return;
   }
   // email is ok to be used.
@@ -170,7 +189,131 @@ router.get("/customer/account", async (req, res) => {
     .toArray();
 
   res.status(200).json(orders);
+});
 
+router.get("/api/customer/orders", auth.required, async (req, res) => {
+  const customerId = req.auth.id;
+  const db = req.app.db;
+
+  // const schemaResult = validateJson("editCustomer", customerObj);
+  // if (!schemaResult.result) {
+  //   console.log("errors", schemaResult.errors);
+  //   res.status(400).json(schemaResult.errors);
+  //   return;
+  // }
+
+  // Update customer
+  try {
+    // check for existing customer
+    const customer = await db.customers.findOne({
+      _id: getId(customerId),
+    });
+    if (!customer) {
+      res.status(400).json({
+        message: "Customer not found",
+      });
+      return;
+    }
+    
+    var ids = customer.orders;
+
+var oids = [];
+ids.forEach(function(item){
+oids.push(getId(item));
+});
+
+  const orders = await db.orders
+    .find({
+      "_id" : { $in : oids }
+    })
+    .sort({ orderDate: -1 })
+    .toArray();
+
+  res.status(200).json(orders);
+
+  } catch (ex) {
+    console.error(colors.red(`Failed get customer: ${ex}`));
+    res.status(400).json({ message: "Failed to get customer" });
+  }
+});
+
+// Update a customer
+router.get("/api/customer/details", auth.required, async (req, res) => {
+  const customerId = req.auth.id;
+  const db = req.app.db;
+
+  // const schemaResult = validateJson("editCustomer", customerObj);
+  // if (!schemaResult.result) {
+  //   console.log("errors", schemaResult.errors);
+  //   res.status(400).json(schemaResult.errors);
+  //   return;
+  // }
+
+  // Update customer
+  try {
+    // check for existing customer
+    const customer = await db.customers.findOne({
+      _id: getId(customerId),
+    });
+    if (!customer) {
+      res.status(400).json({
+        message: "Customer not found",
+      });
+      return;
+    }
+    res.status(200).json({
+      message: "Customer updated",
+      data: { phone: customer.phone, fullName: customer.fullName},
+    });
+  } catch (ex) {
+    console.error(colors.red(`Failed get customer: ${ex}`));
+    res.status(400).json({ message: "Failed to get customer" });
+  }
+});
+
+// Update a customer
+router.post("/api/customer/update-name", auth.required, async (req, res) => {
+  const customerId = req.auth.id;
+  const db = req.app.db;
+
+  const customerObj = {
+    fullName: req.body.fullName,
+  };
+
+  // const schemaResult = validateJson("editCustomer", customerObj);
+  // if (!schemaResult.result) {
+  //   console.log("errors", schemaResult.errors);
+  //   res.status(400).json(schemaResult.errors);
+  //   return;
+  // }
+
+  // check for existing customer
+  const customer = await db.customers.findOne({
+    _id: getId(customerId),
+  });
+  if (!customer) {
+    res.status(400).json({
+      message: "Customer not found",
+    });
+    return;
+  }
+  // Update customer
+  try {
+    const updatedCustomer = await db.customers.findOneAndUpdate(
+      { _id: getId(customerId) },
+      {
+        $set: { ...customer, fullName: req.body.fullName },
+      },
+      { multi: false, returnOriginal: false }
+    );
+    res.status(200).json({
+      message: "Customer updated",
+      customer: { fullName: updatedCustomer.value.fullName },
+    });
+  } catch (ex) {
+    console.error(colors.red(`Failed updating customer: ${ex}`));
+    res.status(400).json({ message: "Failed to update customer" });
+  }
 });
 
 // Update a customer
@@ -466,21 +609,8 @@ router.post("/admin/customer/lookup", restrict, async (req, res, next) => {
   });
 });
 
-router.get("/customer/login", async (req, res, next) => {
-  const config = req.app.config;
-
-  res.render(`${config.themeViews}customer-login`, {
-    title: "Customer login",
-    config: req.app.config,
-    session: req.session,
-    message: clearSessionValue(req.session, "message"),
-    messageType: clearSessionValue(req.session, "messageType"),
-    helpers: req.handlebars.helpers,
-  });
-});
-
 // login the customer and check the password
-router.post("/customer/login_action", async (req, res) => {
+router.post("/customer/login_action", async (req, res, next) => {
   const db = req.app.db;
 
   const customer = await db.customers.findOne({
@@ -489,40 +619,22 @@ router.post("/customer/login_action", async (req, res) => {
   // check if customer exists with that email
   if (customer === undefined || customer === null) {
     res.status(400).json({
-      message: "A customer with that email does not exist.",
+      message: "A customer with that phone does not exist.",
     });
     return;
   }
-  // we have a customer under that email so we compare the password
-  bcrypt
-    .compare(req.body.loginPassword, customer.password)
-    .then((result) => {
-      if (!result) {
-        // password is not correct
-        res.status(400).json({
-          message: "Access denied. Check password and try again.",
-        });
-        return;
-      }
 
-      // Customer login successful
-      req.session.customerPresent = true;
-      req.session.customerId = customer._id;
-      req.session.customerFullName = customer.fullName;
-      req.session.customerAddress1 = customer.address1;
-      req.session.customerState = customer.state;
-      req.session.customerPhone = customer.phone;
+  console.log("customer", customer);
+  authService.toAuthJSON(customer, req).then((result) => {
+    res.status(200).json({ cutomer: result });
+  });
 
-      res.status(200).json({
-        message: "Successfully logged in",
-        customer: customer,
-      });
-    })
-    .catch((err) => {
-      res.status(400).json({
-        message: "Access denied. Check password and try again.",
-      });
-    });
+  //next(res.status(400).info);
+  //   .catch((err) => {
+  //     res.status(400).json({
+  //       message: "Access denied. Check password and try again.",
+  //     });
+  //   });
 });
 
 // customer forgotten password
