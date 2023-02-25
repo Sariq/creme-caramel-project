@@ -33,7 +33,6 @@ router.post("/api/customer/validateAuthCode", async (req, res) => {
     phone: req.body.phone,
     authCode: req.body.authCode,
   };
-  console.log("customerObj", customerObj);
   const customer = await db.customers.findOne({ phone: customerObj.phone });
   // check if customer exists with that email
   if (customer === undefined || customer === null) {
@@ -51,7 +50,6 @@ router.post("/api/customer/validateAuthCode", async (req, res) => {
       ...customer,
       authCode: undefined,
     };
-    console.log("customerNewUpdate", customerNewUpdate);
 
     // Update customer
     try {
@@ -73,11 +71,11 @@ router.post("/api/customer/validateAuthCode", async (req, res) => {
       });
     } catch (ex) {
       console.error(colors.red(`Failed updating customer: ${ex}`));
-      res.status(400).json({ message: "Failed to update customer" });
+      res.status(400).json({ message: "Failed to update customer", error_code: -1 });
     }
   } else {
-    res.status(400).json({
-      message: "Invalid Code",
+    res.status(200).json({
+      err_code: -3,
     });
     return;
   }
@@ -105,7 +103,7 @@ router.post("/api/customer/create", async (req, res) => {
     const updatedCustomer = await db.customers.findOneAndUpdate(
       { phone: req.body.phone },
       {
-        $set: { ...customer, authCode: random4DigitsCode },
+        $set: { ...customer, authCode: random4DigitsCode, token: null },
       },
       { multi: false, returnOriginal: false }
     );
@@ -214,23 +212,22 @@ router.get("/api/customer/orders", auth.required, async (req, res) => {
       });
       return;
     }
-    
+
     var ids = customer.orders;
 
-var oids = [];
-ids.forEach(function(item){
-oids.push(getId(item));
-});
+    var oids = [];
+    ids.forEach(function (item) {
+      oids.push(getId(item));
+    });
 
-  const orders = await db.orders
-    .find({
-      "_id" : { $in : oids }
-    })
-    .sort({ orderDate: -1 })
-    .toArray();
+    const orders = await db.orders
+      .find({
+        _id: { $in: oids },
+      })
+      .sort({ orderDate: -1 })
+      .toArray();
 
-  res.status(200).json(orders);
-
+    res.status(200).json(orders);
   } catch (ex) {
     console.error(colors.red(`Failed get customer: ${ex}`));
     res.status(400).json({ message: "Failed to get customer" });
@@ -263,7 +260,7 @@ router.get("/api/customer/details", auth.required, async (req, res) => {
     }
     res.status(200).json({
       message: "Customer updated",
-      data: { phone: customer.phone, fullName: customer.fullName},
+      data: { phone: customer.phone, fullName: customer.fullName },
     });
   } catch (ex) {
     console.error(colors.red(`Failed get customer: ${ex}`));
@@ -788,10 +785,18 @@ router.post("/customer/check", (req, res) => {
 });
 
 // logout the customer
-router.post("/customer/logout", (req, res) => {
-  // Clear our session
-  clearCustomer(req);
-  res.status(200).json({});
+router.post("/api/customer/logout",auth.required, async (req, res) => {
+  const db = req.app.db;
+  const { auth : { id } } = req
+  await db.customers.findOneAndUpdate(
+    { _id: getId(id) },
+    {
+      $set: {token},
+    },
+    { multi: false, returnOriginal: false }
+  );
+
+  res.status(200).json({data: 'logout success'});
 });
 
 // logout the customer

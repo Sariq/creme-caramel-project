@@ -4,7 +4,6 @@ const jwt = require('jsonwebtoken');
 generateJWT = async function (user,req) {
     return new Promise(async function (resolve, reject) {
         const db = req.app.db;
-        console.log("db", db.customers)
         const today = new Date();
         const expirationDate = new Date(today);
         expirationDate.setDate(today.getDate() + 60);

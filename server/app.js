@@ -60,7 +60,7 @@ app.set('port', process.env.PORT || 1111);
 app.use(logger('dev'));
 app.use(express.urlencoded({ extended: false }));
 app.use(cors());
-app.use(session({ secret: 'passport-tutorial', cookie: { maxAge: 60000 }, resave: false, saveUninitialized: false }));
+app.use(session({ secret: 'secret', cookie: { maxAge: 60000 }, resave: false, saveUninitialized: false }));
 
 app.use(express.json({}));
 
