@@ -9,14 +9,9 @@ export const addNewProductApi = (product: TProduct) => {
     product.categoryId && formData.append('categoryId', product.categoryId)
     product.description && formData.append('description', product.description)
     product.price && formData.append('price', product.price.toString())
+    console.log("IMMMAGE", product.img)
     return axios
-      .post(process.env.REACT_APP_API+"admin/product/insert", {
-        name: product.name,
-        img: product.img,
-        categoryId: product.categoryId,
-        description: product.description,
-        price: product.price
-      })
+      .post(process.env.REACT_APP_API+"admin/product/insert",formData,{})
       .then(function (response) {
           console.log("added success", response);
           return response.data;
@@ -24,3 +19,11 @@ export const addNewProductApi = (product: TProduct) => {
   };
 
   export default addNewProductApi;
+
+  // JSON.stringify({
+  //   name: product.name,
+  //   img: product.img,
+  //   categoryId: product.categoryId,
+  //   description: product.description,
+  //   price: product.price
+  // }

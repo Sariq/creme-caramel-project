@@ -38,6 +38,7 @@ function initDb(dbUrl, callback){ // eslint-disable-line
         db.sessions = db.collection('sessions');
         db.discounts = db.collection('discounts');
         db.reviews = db.collection('reviews');
+        db.amazonconfigs = db.collection('amazonconfigs');
 
         _db = db;
         return callback(null, _db);

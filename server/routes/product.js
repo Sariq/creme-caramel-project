@@ -9,6 +9,16 @@ const {
   safeParseInt,
   getImages,
 } = require("../lib/common");
+const AWS = require("aws-sdk");
+var multer = require("multer");
+const upload = multer({ storage: multer.memoryStorage() });
+// import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+var {
+  S3Client,
+  PutObjectCommand,
+  DeleteObjectCommand,
+} = require("@aws-sdk/client-s3");
+
 const { indexProducts } = require("../lib/indexing");
 const { validateJson } = require("../lib/schema");
 const { paginateData } = require("../lib/paginate");
@@ -18,12 +28,179 @@ const fs = require("fs");
 const path = require("path");
 const router = express.Router();
 
+const BUCKET_NAME = "creme-caramel-images";
+const spacesEndpoint = new AWS.Endpoint(
+  "https://creme-caramel-images.fra1.digitaloceanspaces.com"
+);
+
+const uploadFile = async (files, req) => {
+  const db = req.app.db;
+  const amazonConfig = await db.amazonconfigs.findOne({});
+  let locationslist = [];
+  let counter = 0;
+  return new Promise((resolve, reject) => {
+    const s3Client = new S3Client({
+      endpoint: "https://fra1.digitaloceanspaces.com", // Find your endpoint in the control panel, under Settings. Prepend "https://".
+      //forcePathStyle: false, // Configures to use subdomain/virtual calling format.
+      region: "FRA1", // Must be "us-east-1" when creating new Spaces. Otherwise, use the region in your endpoint (e.g. nyc3).
+      credentials: {
+        accessKeyId: amazonConfig["ID_KEY"], // Access key pair. You can create access key pairs using the control panel or API.
+        secretAccessKey: amazonConfig["SECRET_KEY"], // Secret access key defined through an environment variable.
+      },
+    });
+    files = files.filter((file) => file.originalname !== "existingImage");
+    if (files.length > 0) {
+      files.forEach(async (file, i) => {
+        const fileName = `${new Date().getTime()}` + file.originalname;
+
+        const params = {
+          Bucket: BUCKET_NAME, // The path to the directory you want to upload the object to, starting with your Space name.
+          Key: `products/${fileName}`, // Object key, referenced whenever you want to access this file later.
+          Body: file.buffer, // The object's contents. This variable is an object, not a string.
+          ACL: "public-read",
+        };
+
+        try {
+          const data = await s3Client.send(new PutObjectCommand(params));
+          locationslist.push({ uri: params.Key });
+          counter++;
+          if (counter === files.length) {
+            resolve(locationslist);
+          }
+        } catch (err) {
+          console.log("Error", err);
+        }
+      });
+    }
+  });
+};
+const deleteImages = async (images, req) => {
+  const db = req.app.db;
+  const amazonConfig = await db.amazonconfigs.findOne({});
+  return new Promise((resolve, reject) => {
+    const s3Client = new S3Client({
+      endpoint: "https://fra1.digitaloceanspaces.com", // Find your endpoint in the control panel, under Settings. Prepend "https://".
+      region: "FRA1", // Must be "us-east-1" when creating new Spaces. Otherwise, use the region in your endpoint (e.g. nyc3).
+      credentials: {
+        accessKeyId: amazonConfig["ID_KEY"], // Access key pair. You can create access key pairs using the control panel or API.
+        secretAccessKey: amazonConfig["SECRET_KEY"], // Secret access key defined through an environment variable.
+      },
+    });
+
+    images?.forEach(async (img)=>{
+      const bucketParams = { Bucket: BUCKET_NAME , Key: img.uri };
+      try {
+        const data = await s3Client.send(new DeleteObjectCommand(bucketParams));
+        console.log("Success. Object deleted.", data);
+      } catch (err) {
+        console.log("Error", err);
+      }
+    })
+    resolve(true);
+  });
+};
+
+// insert new product form action
+router.post(
+  "/admin/product/insert",
+  upload.array("img"),
+  async (req, res, next) => {
+    const db = req.app.db;
+    // try{
+    //   const amazonConfig = await db.amazonconfigs.findOne({});
+    //   console.log("amazonConfig",amazonConfig)
+    // }catch(e){
+    //   console.log(e)
+    // }
+
+    const orderDoc = { ...req.body };
+    console.log(orderDoc);
+    let doc = {
+      name: req.body.name,
+      categoryId: req.body.categoryId,
+      description: cleanHtml(req.body.description),
+      price: cleanHtml(req.body.price),
+      count: cleanHtml(req.body.count),
+      createdAt: new Date(),
+    };
+    // doc.img = JSON.parse(req.body.img);
+    // doc.img = req.body.img.filter(file=> !file.isNew)
+    if (req.files && req.files.length > 1) {
+      doc.img = req.body.img.concat(await uploadFile(req.files, req));
+    } else {
+      doc.img = await uploadFile(req.files, req);
+    }
+
+    // Validate the body again schema
+    // const schemaValidate = validateJson('newProduct', doc);
+    // if(!schemaValidate.result){
+    //     if(process.env.NODE_ENV !== 'test'){
+    //         console.log('schemaValidate errors', schemaValidate.errors);
+    //     }
+    //     res.status(400).json(schemaValidate.errors);
+    //     return;
+    // }
+    // Check permalink doesn't already exist
+    const product = await db.products.countDocuments({ name: req.body.name });
+    if (product > 0 && req.body.name !== "") {
+      res
+        .status(400)
+        .json({ message: "product already exists. Pick a new one." });
+      return;
+    }
+
+    try {
+      const newDoc = await db.products.insertOne(doc);
+      // get the new ID
+      const newId = newDoc.insertedId;
+
+      // add to lunr index
+      indexProducts(req.app).then(() => {
+        res.status(200).json({
+          message: "New product successfully created",
+          productId: newId,
+        });
+      });
+    } catch (ex) {
+      console.log(colors.red(`Error inserting document: ${ex}`));
+      res.status(400).json({ message: "Error inserting document" });
+    }
+  }
+);
+
+// delete a product
+router.post("/admin/product/delete", async (req, res) => {
+  const db = req.app.db;
+  const objectIdsList = req.body.productsIdsList.map((id) => {
+    return getId(id);
+  });
+
+  const results = await db.products
+  .find({ _id: { $in: objectIdsList } })
+  .toArray();
+  console.log(results);
+
+  await results.forEach(async (product)=>{
+    await deleteImages(product.img, req);
+  });
+  await db.products.deleteMany({ _id: { $in: objectIdsList } }, {});
+
+  // Remove the variants
+  //await db.variants.deleteMany({ product: getId(req.body.productId) }, {});
+
+  // re-index products
+  indexProducts(req.app).then(() => {
+    res.status(200).json({ message: "Product successfully deleted" });
+  });
+  // });
+});
+
 router.get("/admin/products/:page?", async (req, res, next) => {
   let pageNum = 1;
   if (req.params.page) {
     pageNum = req.params.page;
   }
-console.log("xx")
+  console.log("xx");
   // Get our paginated data
   const products = await paginateData(
     false,
@@ -37,22 +214,22 @@ console.log("xx")
 });
 
 router.get("/admin/products/category/:id/:page?", async (req, res, next) => {
-    let pageNum = 1;
-    if (req.params.page) {
-      pageNum = req.params.page;
-    }
-  
-    // Get our paginated data
-    const products = await paginateData(
-      false,
-      req,
-      pageNum,
-      "products",
-      {categoryId: req.params.id},
-      { productAddedDate: -1 }
-    );
-    res.status(200).json(products.data);
-  });
+  let pageNum = 1;
+  if (req.params.page) {
+    pageNum = req.params.page;
+  }
+
+  // Get our paginated data
+  const products = await paginateData(
+    false,
+    req,
+    pageNum,
+    "products",
+    { categoryId: req.params.id },
+    { productAddedDate: -1 }
+  );
+  res.status(200).json(products.data);
+});
 
 router.get(
   "/admin/products/filter/:search",
@@ -110,58 +287,6 @@ router.get("/admin/product/new", restrict, checkAccess, (req, res) => {
   });
 });
 
-// insert new product form action
-router.post("/admin/product/insert", async (req, res, next) => {
-  const db = req.app.db;
-  const orderDoc = {...req.body}
-  console.log(orderDoc)
-    const doc = {
-    name: req.body.name,
-    img: cleanHtml(req.body.img),
-    categoryId: req.body.categoryId,
-    description: cleanHtml(req.body.description),
-    price: cleanHtml(req.body.price),
-    count: cleanHtml(req.body.count),
-    createdAt: new Date(),
-  };
-
-  // Validate the body again schema
-  // const schemaValidate = validateJson('newProduct', doc);
-  // if(!schemaValidate.result){
-  //     if(process.env.NODE_ENV !== 'test'){
-  //         console.log('schemaValidate errors', schemaValidate.errors);
-  //     }
-  //     res.status(400).json(schemaValidate.errors);
-  //     return;
-  // }
-
-  // Check permalink doesn't already exist
-  const product = await db.products.countDocuments({ name: req.body.name });
-  if (product > 0 && req.body.name !== "") {
-    res
-      .status(400)
-      .json({ message: "product already exists. Pick a new one." });
-    return;
-  }
-
-  try {
-    const newDoc = await db.products.insertOne(doc);
-    // get the new ID
-    const newId = newDoc.insertedId;
-
-    // add to lunr index
-    indexProducts(req.app).then(() => {
-      res.status(200).json({
-        message: "New product successfully created",
-        productId: newId,
-      });
-    });
-  } catch (ex) {
-    console.log(colors.red(`Error inserting document: ${ex}`));
-    res.status(400).json({ message: "Error inserting document" });
-  }
-});
-
 // get product by id
 router.get("/admin/product/:id", async (req, res) => {
   const db = req.app.db;
@@ -183,23 +308,25 @@ router.get("/admin/product/:id", async (req, res) => {
 });
 
 router.get("/admin/:categoryId/product", async (req, res) => {
-    const db = req.app.db;
-  
-    const product = await db.products.findOne({ categoryId: getId(req.params.categoryId) });
-    if (!product) {
-      // If API request, return json
-      if (req.apiAuthenticated) {
-        res.status(400).json({ message: "Product not found" });
-        return;
-      }
+  const db = req.app.db;
+
+  const product = await db.products.findOne({
+    categoryId: getId(req.params.categoryId),
+  });
+  if (!product) {
+    // If API request, return json
+    if (req.apiAuthenticated) {
+      res.status(400).json({ message: "Product not found" });
       return;
     }
-  
-    // If API request, return json
-  
-    res.status(200).json(product);
     return;
-  });
+  }
+
+  // If API request, return json
+
+  res.status(200).json(product);
+  return;
+});
 
 // render the editor
 router.get(
@@ -355,12 +482,10 @@ router.post(
           returnOriginal: false,
         }
       );
-      res
-        .status(200)
-        .json({
-          message: "Successfully saved variant",
-          variant: updatedVariant.value,
-        });
+      res.status(200).json({
+        message: "Successfully saved variant",
+        variant: updatedVariant.value,
+      });
     } catch (ex) {
       res
         .status(400)
@@ -475,38 +600,6 @@ router.post(
     } catch (ex) {
       res.status(400).json({ message: "Failed to save. Please try again" });
     }
-  }
-);
-
-// delete a product
-router.post(
-  "/admin/product/delete",
-  async (req, res) => {
-    const db = req.app.db;
-    const objectIdsList = req.body.productsIdsList.map((id)=> {
-   
-        return getId(id)
-    });
-    console.log(objectIdsList)
-    // remove the product
-    await db.products.deleteMany({ _id: {$in: objectIdsList} }, {});
-    //await db.products.deleteOne({ _id: getId(req.body.productId) }, {});
-
-    // Remove the variants
-    //await db.variants.deleteMany({ product: getId(req.body.productId) }, {});
-
-    // delete any images and folder
-    // rimraf(`public/uploads/${req.body.productId}`, (err) => {
-    //   if (err) {
-    //     console.info(err.stack);
-    //     res.status(400).json({ message: "Failed to delete product" });
-    //   }
-
-      // re-index products
-      indexProducts(req.app).then(() => {
-        res.status(200).json({ message: "Product successfully deleted" });
-      });
-    // });
   }
 );
 

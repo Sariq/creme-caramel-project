@@ -12,6 +12,7 @@ import uploadImage from "apis/admin/product/upload-image";
 import getProductApi from "apis/admin/product/get-product";
 import getCategoriesListApi from "apis/admin/category/get-categories";
 import { TCategory } from "shared/types/category";
+import React from "react";
 
 const iconClass =
   "text-white p-3 text-center inline-flex items-center justify-center w-12 h-12 shadow-lg rounded-full";
@@ -80,20 +81,22 @@ const ProductPage = () => {
   const handlAddClick = () => {
     if (selectedProduct && imgFile) {
       setIsLoading(true);
-      uploadImage(imgFile).then((res) => {
-        const updatedData = { ...selectedProduct, img: res };
+      //uploadImage(imgFile).then((res) => {
+        console.log("imgFile",imgFile)
+        const updatedData = { ...selectedProduct, img: imgFile };
         setSelectedProduct(updatedData);
         addNewProductApi(updatedData).then((res: any) => {
           console.log(res);
           navigate(`/admin/product/${res.productId}`);
           setIsLoading(false);
         });
-      });
+      //});
     }
   };
 
   const handleFileChange = (event: any) => {
     const target = event.target;
+    console.log("event.target.files[0]",event.target.files[0])
     setImgFile(event.target.files[0]);
   };
 
@@ -145,7 +148,7 @@ const ProductPage = () => {
   return (
     <>
       <div className="relative flex flex-col min-w-0 break-words w-full mb-6 shadow-lg rounded-lg bg-blueGray-100 border-0">
-        {isLoading && (
+        {isLoading && false && (
           <div className="absolute w-full h-full opacity-60 z-10 bg-gray-900">
             <div
               role="status"
