@@ -22,20 +22,44 @@ const router = express.Router();
 
 // Show orders
 router.get('/api/order/admin/orders/:page?', auth.required, async (req, res, next) => {
+    const db = req.app.db;
+    let finalOrders = [];
+
     let pageNum = 1;
     if(req.params.page){
         pageNum = req.params.page;
     }
 
+
     // Get our paginated data
     const orders = await paginateData(false, req, pageNum, 'orders', {}, { orderDate: -1 });
+    // orders?.data?.forEach(async (order)=>{
+        for (const order of orders?.data) {
+         console.log('looop')
+        const customer = await db.customers.findOne({
+            _id: getId(order.customerId),
+          });
+        //   if (!customer) {
+        //       console.log("AAAAA")
+        //     res.status(400).json({
+        //       message: "Customer not found",
+        //     });
+        //     return;
+        //   }
+          finalOrders.push({...order, customerDetails: {
+            name: customer.fullName,
+            phone: customer.phone,
+          }})
+          console.log("AAAAAfinalOrders",finalOrders)
+
+    }
+    console.log("finalOrders",finalOrders.length)
 
     // If API request, return json
     // if(req.apiAuthenticated){
-        res.status(200).json({
-            orders
-        });
-        return;
+        res.status(200).json(
+             finalOrders
+        );
     // }
 });
 
@@ -120,7 +144,7 @@ router.post('/api/order/create', auth.required, async (req, res, next) => {
     //         message: 'The cart is empty. You will need to add items to the cart first.'
     //     });
     // }
-    const orderDoc = {...req.body, created: new Date(),}
+    const orderDoc = {...req.body, created: new Date(), customerId }
     console.log("orderDoc",orderDoc)
     // insert order into DB
     try{

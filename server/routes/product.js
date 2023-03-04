@@ -34,10 +34,14 @@ const spacesEndpoint = new AWS.Endpoint(
 );
 
 const uploadFile = async (files, req) => {
+  console.log("X1")
+
   const db = req.app.db;
   const amazonConfig = await db.amazonconfigs.findOne({});
   let locationslist = [];
   let counter = 0;
+  console.log("X2")
+
   return new Promise((resolve, reject) => {
     const s3Client = new S3Client({
       endpoint: "https://fra1.digitaloceanspaces.com", // Find your endpoint in the control panel, under Settings. Prepend "https://".
@@ -49,6 +53,7 @@ const uploadFile = async (files, req) => {
       },
     });
     files = files.filter((file) => file.originalname !== "existingImage");
+    console.log("X3")
     if (files.length > 0) {
       files.forEach(async (file, i) => {
         const fileName = `${new Date().getTime()}` + file.originalname;
@@ -61,10 +66,15 @@ const uploadFile = async (files, req) => {
         };
 
         try {
+          console.log("X4")
+
           const data = await s3Client.send(new PutObjectCommand(params));
           locationslist.push({ uri: params.Key });
           counter++;
+          console.log("X5")
+
           if (counter === files.length) {
+            console.log("X6")
             resolve(locationslist);
           }
         } catch (err) {
@@ -102,7 +112,7 @@ const deleteImages = async (images, req) => {
 
 // insert new product form action
 router.post(
-  "/admin/product/insert",
+  "/api/admin/product/insert",
   upload.array("img"),
   async (req, res, next) => {
     const db = req.app.db;
@@ -112,9 +122,8 @@ router.post(
     // }catch(e){
     //   console.log(e)
     // }
-
+    console.log("req.body",req.body)
     const orderDoc = { ...req.body };
-    console.log(orderDoc);
     let doc = {
       name: req.body.name,
       categoryId: req.body.categoryId,
@@ -123,6 +132,7 @@ router.post(
       count: cleanHtml(req.body.count),
       createdAt: new Date(),
     };
+    console.log("doc",doc)
     // doc.img = JSON.parse(req.body.img);
     // doc.img = req.body.img.filter(file=> !file.isNew)
     if (req.files && req.files.length > 1) {
@@ -130,6 +140,7 @@ router.post(
     } else {
       doc.img = await uploadFile(req.files, req);
     }
+    console.log("doc.img",doc.img)
 
     // Validate the body again schema
     // const schemaValidate = validateJson('newProduct', doc);
@@ -142,6 +153,8 @@ router.post(
     // }
     // Check permalink doesn't already exist
     const product = await db.products.countDocuments({ name: req.body.name });
+    console.log("productproduct",product)
+
     if (product > 0 && req.body.name !== "") {
       res
         .status(400)
@@ -168,12 +181,124 @@ router.post(
   }
 );
 
+// Update an existing product form action
+router.post(
+  "/api/admin/product/update",
+  upload.array("img"),
+  async (req, res) => {
+    const db = req.app.db;
+
+
+    const product = await db.products.findOne({
+      _id: getId(req.body.productId),
+    });
+
+
+
+    if (!product) {
+      res.status(400).json({ message: "Failed to update product" });
+      return;
+    }
+    let productDoc = {
+      name: req.body.name,
+      categoryId: req.body.categoryId,
+      description: cleanHtml(req.body.description),
+      price: cleanHtml(req.body.price),
+      count: cleanHtml(req.body.count),
+      updatedAt: new Date(),
+    };
+    if (req.files) {
+      productDoc.img = await uploadFile(req.files, req);
+      await deleteImages(product.img, req);
+    }
+
+    try {
+      await db.products.updateOne(
+        { _id: getId(req.body.productId) },
+        { $set: productDoc },
+        {}
+      );
+      // Update the index
+      indexProducts(req.app).then(() => {
+        res
+          .status(200)
+          .json({ message: "Successfully saved", product: productDoc });
+      });
+    } catch (ex) {
+      res.status(400).json({ message: "Failed to save. Please try again" });
+    }
+
+    return;
+
+    // const count = await db.products.countDocuments({
+    //   productPermalink: req.body.productPermalink,
+    //   _id: { $ne: getId(product._id) },
+    // });
+    // if (count > 0 && req.body.productPermalink !== "") {
+    //   res
+    //     .status(400)
+    //     .json({ message: "Permalink already exists. Pick a new one." });
+    //   return;
+    // }
+
+    // const images = await getImages(req.body.productId, req, res);
+    // let productDoc = {
+    //   name: req.body.name,
+    //   categoryId: req.body.categoryId,
+    //   description: cleanHtml(req.body.description),
+    //   price: cleanHtml(req.body.price),
+    //   count: cleanHtml(req.body.count),
+    //   updatedAt: new Date(),
+    // };
+
+    // // Validate the body again schema
+    // const schemaValidate = validateJson("editProduct", productDoc);
+    // if (!schemaValidate.result) {
+    //   res.status(400).json(schemaValidate.errors);
+    //   return;
+    // }
+
+    // // Remove productId from doc
+    // delete productDoc.productId;
+
+    // // if no featured image
+    // if (!product.productImage) {
+    //   if (images.length > 0) {
+    //     productDoc.productImage = images[0].path;
+    //   } else {
+    //     productDoc.productImage = "/uploads/placeholder.png";
+    //   }
+    // } else {
+    //   productDoc.productImage = product.productImage;
+    // }
+
+    // try {
+    //   await db.products.updateOne(
+    //     { _id: getId(req.body.productId) },
+    //     { $set: productDoc },
+    //     {}
+    //   );
+    //   // Update the index
+    //   indexProducts(req.app).then(() => {
+    //     res
+    //       .status(200)
+    //       .json({ message: "Successfully saved", product: productDoc });
+    //   });
+    // } catch (ex) {
+    //   res.status(400).json({ message: "Failed to save. Please try again" });
+    // }
+  }
+);
+
 // delete a product
-router.post("/admin/product/delete", async (req, res) => {
+router.post("/api/admin/product/delete", async (req, res) => {
   const db = req.app.db;
-  const objectIdsList = req.body.productsIdsList.map((id) => {
-    return getId(id);
-  });
+  try{
+    const objectIdsList = req.body.productsIdsList.map((id) => {
+      return getId(id);
+    });
+
+
 
   const results = await db.products
   .find({ _id: { $in: objectIdsList } })
@@ -192,6 +317,10 @@ router.post("/admin/product/delete", async (req, res) => {
   indexProducts(req.app).then(() => {
     res.status(200).json({ message: "Product successfully deleted" });
   });
+}catch(e){
+  console.log(e)
+  res.status(200).json({ message: e });
+}
   // });
 });
 
@@ -520,88 +649,7 @@ router.post(
   }
 );
 
-// Update an existing product form action
-router.post(
-  "/admin/product/update",
-  restrict,
-  checkAccess,
-  async (req, res) => {
-    const db = req.app.db;
 
-    const product = await db.products.findOne({
-      _id: getId(req.body.productId),
-    });
-
-    if (!product) {
-      res.status(400).json({ message: "Failed to update product" });
-      return;
-    }
-    const count = await db.products.countDocuments({
-      productPermalink: req.body.productPermalink,
-      _id: { $ne: getId(product._id) },
-    });
-    if (count > 0 && req.body.productPermalink !== "") {
-      res
-        .status(400)
-        .json({ message: "Permalink already exists. Pick a new one." });
-      return;
-    }
-
-    const images = await getImages(req.body.productId, req, res);
-    const productDoc = {
-      productId: req.body.productId,
-      productPermalink: req.body.productPermalink,
-      productTitle: cleanHtml(req.body.productTitle),
-      productPrice: req.body.productPrice,
-      productDescription: cleanHtml(req.body.productDescription),
-      productGtin: cleanHtml(req.body.productGtin),
-      productBrand: cleanHtml(req.body.productBrand),
-      productPublished: convertBool(req.body.productPublished),
-      productTags: req.body.productTags,
-      productComment: checkboxBool(req.body.productComment),
-      productStock: safeParseInt(req.body.productStock) || null,
-      productStockDisable: convertBool(req.body.productStockDisable),
-      productSubscription: cleanHtml(req.body.productSubscription),
-    };
-
-    // Validate the body again schema
-    const schemaValidate = validateJson("editProduct", productDoc);
-    if (!schemaValidate.result) {
-      res.status(400).json(schemaValidate.errors);
-      return;
-    }
-
-    // Remove productId from doc
-    delete productDoc.productId;
-
-    // if no featured image
-    if (!product.productImage) {
-      if (images.length > 0) {
-        productDoc.productImage = images[0].path;
-      } else {
-        productDoc.productImage = "/uploads/placeholder.png";
-      }
-    } else {
-      productDoc.productImage = product.productImage;
-    }
-
-    try {
-      await db.products.updateOne(
-        { _id: getId(req.body.productId) },
-        { $set: productDoc },
-        {}
-      );
-      // Update the index
-      indexProducts(req.app).then(() => {
-        res
-          .status(200)
-          .json({ message: "Successfully saved", product: productDoc });
-      });
-    } catch (ex) {
-      res.status(400).json({ message: "Failed to save. Please try again" });
-    }
-  }
-);
 
 // update the published state based on an ajax call from the frontend
 router.post(
