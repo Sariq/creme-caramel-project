@@ -1,5 +1,6 @@
 const express = require('express');
 const auth = require('./auth');
+const orderid = require('order-id')('key');
 
 const {
     clearSessionValue,
@@ -144,7 +145,9 @@ router.post('/api/order/create', auth.required, async (req, res, next) => {
     //         message: 'The cart is empty. You will need to add items to the cart first.'
     //     });
     // }
-    const orderDoc = {...req.body, created: new Date(), customerId }
+    const generatedOrderId = orderid.generate();
+    console.log("generatedOrderId",generatedOrderId)
+    const orderDoc = {...req.body, created: new Date(), customerId, orderId: generatedOrderId, status: "1" }
     console.log("orderDoc",orderDoc)
     // insert order into DB
     try{
@@ -250,14 +253,10 @@ router.get('/admin/order/delete/:id', async(req, res) => {
 });
 
 // update order
-router.post('/admin/order/updateorder', restrict, checkAccess, async (req, res) => {
+router.post('/api/order/update', auth.required, async (req, res) => {
     const db = req.app.db;
     try{
-        const updateobj = { orderStatus: req.body.status };
-        if(req.body.trackingNumber){
-            // add tracking number
-            updateobj.trackingNumber = req.body.trackingNumber;
-        }
+        const updateobj = { status: req.body.status };
         await db.orders.updateOne({
             _id: getId(req.body.order_id) },
             { $set: updateobj }, { multi: false });
