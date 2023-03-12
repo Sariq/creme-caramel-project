@@ -124,6 +124,7 @@ router.post(
     // }
     console.log("req.body",req.body)
     const orderDoc = { ...req.body };
+    console.log("orderDoc",orderDoc)
     let doc = {
       name: req.body.name,
       categoryId: req.body.categoryId,
@@ -750,5 +751,6 @@ router.post(
     }
   }
 );
+
 
 module.exports = router;

@@ -171,6 +171,30 @@ router.post('/api/order/create', auth.required, async (req, res, next) => {
             },
             { multi: false, returnOriginal: false }
           );
+          orderDoc.order.items.forEach(async (item)=>{
+              
+              console.log("itmeid", item.item_id)
+              const product = await db.products.findOne({
+                _id: getId(item.item_id),
+              });
+                  const updatedProduct = {...product, count: product.count - 1}
+                await db.products.updateOne(
+                  { _id: getId(item.item_id) },
+                  { $set: updatedProduct },
+                  {}
+                );
+                // Update the index
+            //     indexProducts(req.app).then(() => {
+            //       res
+            //         .status(200)
+            //         .json({ message: "Successfully saved", product: productDoc });
+            //     });
+            //   } catch (ex) {
+            //     res.status(400).json({ message: "Failed to save. Please try again" });
+            //   }
+        })
+
+         
         // add to lunr index
         indexOrders(req.app)
         .then(() => {
@@ -257,8 +281,10 @@ router.post('/api/order/update', auth.required, async (req, res) => {
     const db = req.app.db;
     try{
         const updateobj = { status: req.body.status };
+        console.log("XXX",updateobj)
+
         await db.orders.updateOne({
-            _id: getId(req.body.order_id) },
+            _id: getId(req.body.orderId) },
             { $set: updateobj }, { multi: false });
         return res.status(200).json({ message: 'Order successfully updated' });
     }catch(ex){
