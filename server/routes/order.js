@@ -36,7 +36,6 @@ router.get('/api/order/admin/orders/:page?', auth.required, async (req, res, nex
     const orders = await paginateData(false, req, pageNum, 'orders', {}, { orderDate: -1 });
     // orders?.data?.forEach(async (order)=>{
         for (const order of orders?.data) {
-         console.log('looop')
         const customer = await db.customers.findOne({
             _id: getId(order.customerId),
           });
@@ -62,6 +61,24 @@ router.get('/api/order/admin/orders/:page?', auth.required, async (req, res, nex
              finalOrders
         );
     // }
+});
+
+router.post('/api/order/byDate',async (req, res, next) => {
+    const db = req.app.db;
+    let finalOrders = [];
+
+    finalOrders = await db.orders.find({
+        created: {
+            $gte: new Date(req.body.startDate),
+            $lt: new Date(req.body.endDate),
+        }
+      }).toArray();
+
+
+        res.status(200).json(
+             finalOrders
+        );
+ 
 });
 
 // Admin section
