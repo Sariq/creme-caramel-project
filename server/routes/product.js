@@ -96,16 +96,17 @@ const deleteImages = async (images, req) => {
         secretAccessKey: amazonConfig["SECRET_KEY"], // Secret access key defined through an environment variable.
       },
     });
-
-    images?.forEach(async (img)=>{
-      const bucketParams = { Bucket: BUCKET_NAME , Key: img.uri };
-      try {
-        const data = await s3Client.send(new DeleteObjectCommand(bucketParams));
-        console.log("Success. Object deleted.", data);
-      } catch (err) {
-        console.log("Error", err);
-      }
-    })
+    if(images){
+      images.forEach(async (img)=>{
+        const bucketParams = { Bucket: BUCKET_NAME , Key: img.uri };
+        try {
+          const data = await s3Client.send(new DeleteObjectCommand(bucketParams));
+          console.log("Success. Object deleted.", data);
+        } catch (err) {
+          console.log("Error", err);
+        }
+      })
+    }
     resolve(true);
   });
 };
