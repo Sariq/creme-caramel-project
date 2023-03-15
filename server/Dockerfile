@@ -8,6 +8,7 @@ COPY lib/ /var/expressCart/lib/
 COPY bin/ /var/expressCart/bin/
 COPY config/ /var/expressCart/config/
 COPY public/ /var/expressCart/public/
+COPY utils/ /var/expressCart/utils/
 COPY routes/ /var/expressCart/routes/
 
 COPY app.js /var/expressCart/
