@@ -2,8 +2,6 @@ FROM node:16
 
 ENV NODE_VERSION 16.0.0
 
-RUN apk add --no-cache make gcc g++ python bash
-
 WORKDIR /var/expressCart
 
 COPY lib/ /var/expressCart/lib/
