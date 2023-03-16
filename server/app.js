@@ -142,6 +142,8 @@ app.on('uncaughtException', (err) => {
     process.exit(2);
 });
 
+console.log("config.databaseConnectionString",config.databaseConnectionString)
+
 initDb(config.databaseConnectionString, async (err, db) => {
     // On connection error we display then exit
     if(err){

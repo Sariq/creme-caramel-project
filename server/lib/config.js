@@ -38,6 +38,9 @@ const getConfig = () => {
     if(process.env.NODE_ENV === 'development' || process.env.NODE_ENV === undefined){
         config.env = '';
     }
+    if(process.env.NODE_ENV === 'development'){
+        config.databaseConnectionString = 'mongodb+srv://doadmin:28Z61I4SNh375OJk@db-mongodb-fra1-04258-088e1ac5.mongo.ondigitalocean.com/expresscart?tls=true&authSource=admin&replicaSet=db-mongodb-fra1-04258';
+    }
 
     // load modules
     try{
