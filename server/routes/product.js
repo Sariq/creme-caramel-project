@@ -82,6 +82,7 @@ const uploadFile = async (files, req) => {
         }
       });
     }
+    resolve(locationslist)
   });
 };
 const deleteImages = async (images, req) => {
@@ -209,8 +210,12 @@ router.post(
       updatedAt: new Date(),
     };
     if (req.files) {
-      productDoc.img = await uploadFile(req.files, req);
-      await deleteImages(product.img, req);
+      console.log(req.files)
+      if(req.files.length > 0){
+        productDoc.img = await uploadFile(req.files, req);
+        await deleteImages(product.img, req);
+      }
+
     }
 
     try {
