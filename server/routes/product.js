@@ -81,8 +81,9 @@ const uploadFile = async (files, req) => {
           console.log("Error", err);
         }
       });
+    }else{
+      resolve(locationslist)
     }
-    resolve(locationslist)
   });
 };
 const deleteImages = async (images, req) => {
@@ -210,12 +211,10 @@ router.post(
       updatedAt: new Date(),
     };
     if (req.files) {
-      console.log(req.files)
       if(req.files.length > 0){
         productDoc.img = await uploadFile(req.files, req);
         await deleteImages(product.img, req);
       }
-
     }
 
     try {
