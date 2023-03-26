@@ -1,6 +1,7 @@
 const express = require('express');
 const auth = require('./auth');
 const orderid = require('order-id')('key');
+const textToImage = require('text-to-image');
 
 const {
     clearSessionValue,
@@ -46,9 +47,25 @@ router.get('/api/order/admin/orders/:page?', auth.required, async (req, res, nex
         //     });
         //     return;
         //   }
+        const price = 100;
+        const name = 'لؤي سماروة';
+        const dataUri = await textToImage.generate(`${name}_ _ _ _ _ _${price}`, {
+            // debug: true,
+          maxWidth: 600,
+            fontSize: 18,
+            
+            // fontFamily: 'Arial',
+            // lineHeight: 30,
+            // margin: 5,
+            // bgColor: 'blue',
+            textColor: 'black',
+          });
+
+          console.log("dataUri",dataUri)
           finalOrders.push({...order, customerDetails: {
             name: customer.fullName,
             phone: customer.phone,
+            //recipet: dataUri
           }})
           console.log("AAAAAfinalOrders",finalOrders)
 
