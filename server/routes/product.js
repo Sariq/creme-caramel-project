@@ -12,6 +12,8 @@ const {
 const AWS = require("aws-sdk");
 var multer = require("multer");
 const upload = multer({ storage: multer.memoryStorage() });
+const websockets = require("../utils/websockets");
+
 // import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 var {
   S3Client,
@@ -223,6 +225,8 @@ router.post(
         { $set: productDoc },
         {}
       );
+      websockets.fireWebscoketEvent();
+
       // Update the index
       indexProducts(req.app).then(() => {
         res
