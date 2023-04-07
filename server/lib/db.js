@@ -40,6 +40,7 @@ function initDb(dbUrl, callback){ // eslint-disable-line
         db.reviews = db.collection('reviews');
         db.amazonconfigs = db.collection('amazonconfigs');
         db.calander = db.collection('calander');
+        db.images = db.collection('images');
 
         _db = db;
         return callback(null, _db);

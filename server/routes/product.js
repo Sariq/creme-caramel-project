@@ -35,14 +35,11 @@ const spacesEndpoint = new AWS.Endpoint(
   "https://creme-caramel-images.fra1.digitaloceanspaces.com"
 );
 
-const uploadFile = async (files, req) => {
-  console.log("X1")
-
+const uploadFile = async (files, req, folderName) => {
   const db = req.app.db;
   const amazonConfig = await db.amazonconfigs.findOne({});
   let locationslist = [];
   let counter = 0;
-  console.log("X2")
 
   return new Promise((resolve, reject) => {
     const s3Client = new S3Client({
@@ -59,10 +56,10 @@ const uploadFile = async (files, req) => {
     if (files.length > 0) {
       files.forEach(async (file, i) => {
         const fileName = `${new Date().getTime()}` + file.originalname;
-
+        const folder = folderName || 'products';
         const params = {
           Bucket: BUCKET_NAME, // The path to the directory you want to upload the object to, starting with your Space name.
-          Key: `products/${fileName}`, // Object key, referenced whenever you want to access this file later.
+          Key: `${folder}/${fileName}`, // Object key, referenced whenever you want to access this file later.
           Body: file.buffer, // The object's contents. This variable is an object, not a string.
           ACL: "public-read",
         };
@@ -116,6 +113,36 @@ const deleteImages = async (images, req) => {
 
 // insert new product form action
 router.post(
+  "/api/admin/images/upload",
+  upload.array("img"),
+  async (req, res, next) => {
+    const db = req.app.db;
+
+    let imagesList = [];
+    if (req.files && req.files.length > 1) {
+      imagesList = await uploadFile(req.files, req, "birthday");
+    }
+
+    if(imagesList?.length > 0){
+      imagesList.forEach((image)=>{
+        const doc = {
+          data: image,
+          type: "birthday"
+        }
+        db.images.insertOne(doc);
+      })
+  
+      res.status(200).json({
+        message: "New product successfully created",
+      });
+    }else{
+      console.log(colors.red(`Error inserting images`));
+      res.status(400).json({ message: "Error inserting images" });
+    }
+}
+);
+// insert new product form action
+router.post(
   "/api/admin/product/insert",
   upload.array("img"),
   async (req, res, next) => {
@@ -130,11 +157,14 @@ router.post(
     const orderDoc = { ...req.body };
     console.log("orderDoc",orderDoc)
     let doc = {
-      name: req.body.name,
+      nameAR: req.body.nameAR,
+      nameHE: req.body.nameHE,
       categoryId: req.body.categoryId,
-      description: cleanHtml(req.body.description),
+      descriptionAR: cleanHtml(req.body.descriptionAR),
+      descriptionHE: cleanHtml(req.body.descriptionHE),
       price: cleanHtml(req.body.price),
       count: cleanHtml(req.body.count),
+      isInStore: req.body.isInStore === "false" ? false : true,
       createdAt: new Date(),
     };
     console.log("doc",doc)
@@ -157,15 +187,15 @@ router.post(
     //     return;
     // }
     // Check permalink doesn't already exist
-    const product = await db.products.countDocuments({ name: req.body.name });
-    console.log("productproduct",product)
+    // const product = await db.products.countDocuments({ name: req.body.nameAR });
+    // console.log("productproduct",product)
 
-    if (product > 0 && req.body.name !== "") {
-      res
-        .status(400)
-        .json({ message: "product already exists. Pick a new one." });
-      return;
-    }
+    // if (product > 0 && req.body.nameAR !== "") {
+    //   res
+    //     .status(400)
+    //     .json({ message: "product already exists. Pick a new one." });
+    //   return;
+    // }
 
     try {
       const newDoc = await db.products.insertOne(doc);
