@@ -3,6 +3,9 @@ const auth = require("./auth");
 const orderid = require("order-id")("key");
 const textToImage = require("text-to-image");
 const websockets = require("../utils/websockets");
+const smsService = require("../utils/sms");
+
+const axios = require('axios');
 
 const {
   clearSessionValue,
@@ -67,7 +70,6 @@ router.get(
         textColor: "black",
       });
 
-      console.log("dataUri", dataUri);
       finalOrders.push({
         ...order,
         customerDetails: {
@@ -76,9 +78,7 @@ router.get(
           //recipet: dataUri
         },
       });
-      console.log("AAAAAfinalOrders", finalOrders);
     }
-    console.log("finalOrders", finalOrders.length);
 
     // If API request, return json
     // if(req.apiAuthenticated){
@@ -204,6 +204,8 @@ router.post("/api/order/create", auth.required, async (req, res, next) => {
     status: "1",
   };
   console.log("orderDoc", orderDoc);
+
+ 
   // insert order into DB
   try {
     const newDoc = await db.orders.insertOne(orderDoc);
@@ -219,6 +221,10 @@ router.post("/api/order/create", auth.required, async (req, res, next) => {
       });
       return;
     }
+
+    
+
+
     const updatedCustomer = await db.customers.findOneAndUpdate(
       { _id: getId(customerId) },
       {
@@ -230,7 +236,6 @@ router.post("/api/order/create", auth.required, async (req, res, next) => {
       { multi: false, returnOriginal: false }
     );
     orderDoc.order.items.forEach(async (item) => {
-      console.log("itmeid", item.item_id);
       const product = await db.products.findOne({
         _id: getId(item.item_id),
       });
@@ -250,7 +255,8 @@ router.post("/api/order/create", auth.required, async (req, res, next) => {
       //     res.status(400).json({ message: "Failed to save. Please try again" });
       //   }
     });
-
+    const smsContent = smsService.getOrderRecivedContent(customer.fullName,orderDoc.total, orderDoc.order.receipt_method, generatedOrderId,  orderDoc.app_language);
+    smsService.sendSMS(customer.phone, smsContent, req);
     // add to lunr index
     indexOrders(req.app).then(() => {
       // send the email with the response

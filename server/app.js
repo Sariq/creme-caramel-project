@@ -175,7 +175,8 @@ initDb(config.databaseConnectionString, async (err, db) => {
   app.db = db;
   app.config = config;
   app.port = app.get("port");
-
+  const activeTrailSecret = await app.db.amazonconfigs.findOne({app: "activetrail"});
+  app.activeTrailSecret = activeTrailSecret.SECRET_KEY;
   // Fire up the cron job to clear temp held stock
   cron.schedule("*/1 * * * *", async () => {
     const validSessions = await db.sessions.find({}).toArray();

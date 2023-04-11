@@ -37,7 +37,7 @@ const spacesEndpoint = new AWS.Endpoint(
 
 const uploadFile = async (files, req, folderName) => {
   const db = req.app.db;
-  const amazonConfig = await db.amazonconfigs.findOne({});
+  const amazonConfig = await db.amazonconfigs.findOne({app: "amazon"});
   let locationslist = [];
   let counter = 0;
 
@@ -87,7 +87,7 @@ const uploadFile = async (files, req, folderName) => {
 };
 const deleteImages = async (images, req) => {
   const db = req.app.db;
-  const amazonConfig = await db.amazonconfigs.findOne({});
+  const amazonConfig = await db.amazonconfigs.findOne({app: "amazon"});
   return new Promise((resolve, reject) => {
     const s3Client = new S3Client({
       endpoint: "https://fra1.digitaloceanspaces.com", // Find your endpoint in the control panel, under Settings. Prepend "https://".
