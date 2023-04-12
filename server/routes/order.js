@@ -262,7 +262,7 @@ router.post("/api/order/create", auth.required, async (req, res, next) => {
       // send the email with the response
       // TODO: Should fix this to properly handle result
       //sendEmail(req.session.paymentEmailAddr, `Your order with ${config.cartTitle}`, getEmailTemplate(paymentResults));
-      websockets.fireWebscoketEvent();
+      websockets.fireWebscoketEvent('new order');
       // redirect to outcome
       res.status(200).json({
         message: "Order created successfully",

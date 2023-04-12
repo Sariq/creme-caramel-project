@@ -16,10 +16,10 @@ initWebSockets = function (server) {
     console.log(`${userId} connected.`);
   });
 };
-fireWebscoketEvent = function () {
+fireWebscoketEvent = function (type = 'general') {
   console.log("clients", clients);
 
-  const data = JSON.stringify({ aa: "aa" });
+  const data = JSON.stringify({ type: type });
   for (let userId in clients) {
     let client = clients[userId];
     //if (client.readyState === WebSocket.OPEN) {

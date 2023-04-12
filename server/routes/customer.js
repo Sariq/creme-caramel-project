@@ -110,8 +110,10 @@ router.post("/api/customer/create", async (req, res) => {
       { multi: false, returnOriginal: false }
     );
     res.status(200).json({ phone: req.body.phone });
-    const smsContent = smsService.getVerifyCodeContent(random4DigitsCode);
-    smsService.sendSMS(customer.phone, smsContent, req);
+    if(customer.phone !== "0542454362"){
+      const smsContent = smsService.getVerifyCodeContent(random4DigitsCode);
+      smsService.sendSMS(customer.phone, smsContent, req);
+    }
     // res.status(400).json({
     //   message: "A customer already exists with that phone number",
     // });

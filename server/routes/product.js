@@ -790,5 +790,26 @@ router.post(
   }
 );
 
+// get images by type
+router.post(
+  "/api/images",
+  async (req, res, next) => {
+    const db = req.app.db;
+
+    console.log("req.body.type",req.body.type)
+    try{
+      const results = await db.images
+      .find({ type: req.body.type })
+      .toArray();
+      res.status(200).json(results);
+    }catch(e){
+      console.log(colors.red(`Error getting images`, e));
+
+      res.status(400).json({ message: "Error getting images" });
+    }
+
+}
+);
+
 
 module.exports = router;
