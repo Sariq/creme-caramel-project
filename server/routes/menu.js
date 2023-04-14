@@ -29,6 +29,10 @@ router.get("/api/menu", async (req, res, next) => {
       );
       //console.log(categories)
       console.log(products)
+      const productsImagesList = [];
+      products.data.forEach(product => {
+        productsImagesList.push(`https://creme-caramel-images.fra1.cdn.digitaloceanspaces.com/${product.img[0].uri}`)
+      });
       const menu = categories.data.map((category)=>{
           const tempCat = {
               ...category,
@@ -38,7 +42,7 @@ router.get("/api/menu", async (req, res, next) => {
       })
       console.log(menu)
 
-    res.status(200).json(menu);
+    res.status(200).json({menu:menu, productsImagesList: productsImagesList});
 });
 
 module.exports = router;

@@ -5,7 +5,7 @@ const textToImage = require("text-to-image");
 const websockets = require("../utils/websockets");
 const smsService = require("../utils/sms");
 
-const axios = require('axios');
+const axios = require("axios");
 
 const {
   clearSessionValue,
@@ -42,7 +42,7 @@ router.get(
       pageNum,
       "orders",
       {},
-      { orderDate: -1 }
+      { orderDate: 1 }
     );
     // orders?.data?.forEach(async (order)=>{
     for (const order of orders?.data) {
@@ -56,18 +56,17 @@ router.get(
       //     });
       //     return;
       //   }
-      const price = 100;
-      const name = "لؤي سماروة";
-      const dataUri = await textToImage.generate(`${name}_ _ _ _ _ _${price}`, {
-        // debug: true,
-        maxWidth: 600,
-        fontSize: 18,
-
-        // fontFamily: 'Arial',
-        // lineHeight: 30,
-        // margin: 5,
-        // bgColor: 'blue',
-        textColor: "black",
+      // const price = 100;
+      const dataUri = await textToImage.generate(customer.fullName, {
+        // // debug: true,
+        // fontSize: 120,
+        maxWidth: 200,
+        // // fontFamily: 'Arial',
+        // // lineHeight: 30,
+        // // margin: 5,
+        // // bgColor: 'blue',
+        // textColor: "black",
+        textAlign: "center",
       });
 
       finalOrders.push({
@@ -75,7 +74,7 @@ router.get(
         customerDetails: {
           name: customer.fullName,
           phone: customer.phone,
-          //recipet: dataUri
+          recipetName: dataUri,
         },
       });
     }
@@ -205,7 +204,6 @@ router.post("/api/order/create", auth.required, async (req, res, next) => {
   };
   console.log("orderDoc", orderDoc);
 
- 
   // insert order into DB
   try {
     const newDoc = await db.orders.insertOne(orderDoc);
@@ -221,9 +219,6 @@ router.post("/api/order/create", auth.required, async (req, res, next) => {
       });
       return;
     }
-
-    
-
 
     const updatedCustomer = await db.customers.findOneAndUpdate(
       { _id: getId(customerId) },
@@ -255,14 +250,21 @@ router.post("/api/order/create", auth.required, async (req, res, next) => {
       //     res.status(400).json({ message: "Failed to save. Please try again" });
       //   }
     });
-    const smsContent = smsService.getOrderRecivedContent(customer.fullName,orderDoc.total, orderDoc.order.receipt_method, generatedOrderId,  orderDoc.app_language);
+    const smsContent = smsService.getOrderRecivedContent(
+      customer.fullName,
+      orderDoc.total,
+      orderDoc.order.receipt_method,
+      generatedOrderId,
+      orderDoc.app_language
+    );
     smsService.sendSMS(customer.phone, smsContent, req);
+    // https://www.waze.com/ul?ll=32.23930691837541,34.95049682449079&navigate=yes&zoom=17
     // add to lunr index
     indexOrders(req.app).then(() => {
       // send the email with the response
       // TODO: Should fix this to properly handle result
       //sendEmail(req.session.paymentEmailAddr, `Your order with ${config.cartTitle}`, getEmailTemplate(paymentResults));
-      websockets.fireWebscoketEvent('new order');
+      websockets.fireWebscoketEvent("new order", orderDoc);
       // redirect to outcome
       res.status(200).json({
         message: "Order created successfully",

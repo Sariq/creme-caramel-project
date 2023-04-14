@@ -162,9 +162,10 @@ router.post(
       categoryId: req.body.categoryId,
       descriptionAR: cleanHtml(req.body.descriptionAR),
       descriptionHE: cleanHtml(req.body.descriptionHE),
-      price: cleanHtml(req.body.price),
-      count: cleanHtml(req.body.count),
+      price: Number(req.body.price),
+      count: Number(req.body.count),
       isInStore: req.body.isInStore === "false" ? false : true,
+      isSizes: req.body.isSizes === "false" ? false : true,
       createdAt: new Date(),
     };
     console.log("doc",doc)

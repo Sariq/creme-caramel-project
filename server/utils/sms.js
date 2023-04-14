@@ -3,6 +3,7 @@ const axios = require('axios');
 const apiPath = 'https://webapi.mymarketing.co.il/api/smscampaign/OperationalMessage';
 
 sendSMS = function ( phoneNumber, smsContent, req) {
+    return;
     const smsData = {
         "details": {
           "name": "AAAA",

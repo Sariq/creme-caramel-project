@@ -16,14 +16,14 @@ initWebSockets = function (server) {
     console.log(`${userId} connected.`);
   });
 };
-fireWebscoketEvent = function (type = 'general') {
+fireWebscoketEvent = function (type = 'general', data = {}) {
   console.log("clients", clients);
 
-  const data = JSON.stringify({ type: type });
+  const message = JSON.stringify({ type: type, data: data });
   for (let userId in clients) {
     let client = clients[userId];
     //if (client.readyState === WebSocket.OPEN) {
-      client.send(data);
+      client.send(message);
     //}
   }
   // let client = clients["uuidv4()"];
