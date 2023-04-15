@@ -258,13 +258,15 @@ router.post("/api/order/create", auth.required, async (req, res, next) => {
       orderDoc.app_language
     );
     smsService.sendSMS(customer.phone, smsContent, req);
+    console.log("fire websocket order")
+    websockets.fireWebscoketEvent("new order", orderDoc);
+
     // https://www.waze.com/ul?ll=32.23930691837541,34.95049682449079&navigate=yes&zoom=17
     // add to lunr index
     indexOrders(req.app).then(() => {
       // send the email with the response
       // TODO: Should fix this to properly handle result
       //sendEmail(req.session.paymentEmailAddr, `Your order with ${config.cartTitle}`, getEmailTemplate(paymentResults));
-      websockets.fireWebscoketEvent("new order", orderDoc);
       // redirect to outcome
       res.status(200).json({
         message: "Order created successfully",

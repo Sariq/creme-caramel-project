@@ -13,6 +13,8 @@ initWebSockets = function (server) {
 
     // Store the new connection and handle messages
     clients[userId] = connection;
+    console.log("clientsINIT", clients);
+
     console.log(`${userId} connected.`);
   });
 };
