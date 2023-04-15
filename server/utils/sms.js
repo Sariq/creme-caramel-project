@@ -20,7 +20,6 @@ sendSMS = function ( phoneNumber, smsContent, req) {
           }
         ]
       };
-      console.log("app.activeTrailSecret", req.app.activeTrailSecret)
     return axios.post(apiPath, smsData, { 
         headers: {
             "Authorization": req.app.activeTrailSecret,

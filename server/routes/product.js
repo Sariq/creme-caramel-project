@@ -153,9 +153,7 @@ router.post(
     // }catch(e){
     //   console.log(e)
     // }
-    console.log("req.body",req.body)
     const orderDoc = { ...req.body };
-    console.log("orderDoc",orderDoc)
     let doc = {
       nameAR: req.body.nameAR,
       nameHE: req.body.nameHE,
@@ -168,7 +166,6 @@ router.post(
       isSizes: req.body.isSizes === "false" ? false : true,
       createdAt: new Date(),
     };
-    console.log("doc",doc)
     // doc.img = JSON.parse(req.body.img);
     // doc.img = req.body.img.filter(file=> !file.isNew)
     if (req.files && req.files.length > 1) {
@@ -176,8 +173,6 @@ router.post(
     } else {
       doc.img = await uploadFile(req.files, req);
     }
-    console.log("doc.img",doc.img)
-
     // Validate the body again schema
     // const schemaValidate = validateJson('newProduct', doc);
     // if(!schemaValidate.result){
@@ -343,7 +338,6 @@ router.post("/api/admin/product/delete", async (req, res) => {
   const results = await db.products
   .find({ _id: { $in: objectIdsList } })
   .toArray();
-  console.log(results);
 
   await results.forEach(async (product)=>{
     await deleteImages(product.img, req);

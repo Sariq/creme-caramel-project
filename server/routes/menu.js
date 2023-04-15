@@ -27,8 +27,6 @@ router.get("/api/menu", async (req, res, next) => {
         {},
         { productAddedDate: -1 }
       );
-      //console.log(categories)
-      console.log(products)
       const productsImagesList = [];
       products.data.forEach(product => {
         productsImagesList.push(`https://creme-caramel-images.fra1.cdn.digitaloceanspaces.com/${product.img[0].uri}`)
@@ -40,8 +38,6 @@ router.get("/api/menu", async (req, res, next) => {
           }
           return tempCat;
       })
-      console.log(menu)
-
     res.status(200).json({menu:menu, productsImagesList: productsImagesList});
 });
 

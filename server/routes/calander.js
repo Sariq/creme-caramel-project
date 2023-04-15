@@ -37,8 +37,6 @@ router.post("/api/admin/calander/enable/hour", async (req, res) => {
 
     try{
         const updateobj = { isDisabled: false };
-        console.log("XXX",updateobj)
-
         await db.calander.deleteOne({
             date: calanderObj.date, hour: calanderObj.hour });
             websockets.fireWebscoketEvent();
