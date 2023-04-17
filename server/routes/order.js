@@ -49,23 +49,9 @@ router.get(
       const customer = await db.customers.findOne({
         _id: getId(order.customerId),
       });
-      //   if (!customer) {
-      //       console.log("AAAAA")
-      //     res.status(400).json({
-      //       message: "Customer not found",
-      //     });
-      //     return;
-      //   }
-      // const price = 100;
+
       const dataUri = await textToImage.generate(customer.fullName, {
-        // // debug: true,
-        // fontSize: 120,
         maxWidth: 200,
-        // // fontFamily: 'Arial',
-        // // lineHeight: 30,
-        // // margin: 5,
-        // // bgColor: 'blue',
-        // textColor: "black",
         textAlign: "center",
       });
 
@@ -78,7 +64,7 @@ router.get(
         },
       });
     }
-
+    console.log("finalOrders",finalOrders)
     // If API request, return json
     // if(req.apiAuthenticated){
     res.status(200).json(finalOrders);
@@ -201,6 +187,7 @@ router.post("/api/order/create", auth.required, async (req, res, next) => {
     customerId,
     orderId: generatedOrderId,
     status: "1",
+    isPrinted: false
   };
   console.log("orderDoc", orderDoc);
 
@@ -259,7 +246,19 @@ router.post("/api/order/create", auth.required, async (req, res, next) => {
     );
     smsService.sendSMS(customer.phone, smsContent, req);
     console.log("fire websocket order")
-    websockets.fireWebscoketEvent("new order", orderDoc);
+    const dataUri = await textToImage.generate(customer.fullName, {
+      maxWidth: 200,
+      textAlign: "center",
+    });
+    const finalOrderDoc = {
+      ...orderDoc,
+    customerDetails: {
+      name: customer.fullName,
+      phone: customer.phone,
+      recipetName: dataUri,
+    }
+  }
+    websockets.fireWebscoketEvent("new order", finalOrderDoc);
 
     // https://www.waze.com/ul?ll=32.23930691837541,34.95049682449079&navigate=yes&zoom=17
     // add to lunr index
@@ -356,6 +355,24 @@ router.post("/api/order/update", auth.required, async (req, res) => {
   } catch (ex) {
     console.info("Error updating order", ex);
     return res.status(400).json({ message: "Failed to update the order" });
+  }
+});
+
+router.post("/api/order/printed", auth.required, async (req, res) => {
+  const db = req.app.db;
+  try {
+    console.log("PRINTED", req.body.orderId)
+    await db.orders.updateOne(
+      {
+        _id: getId(req.body.orderId),
+      },
+      { $set: {isPrinted: true} },
+      { multi: false }
+    );
+    return res.status(200).json({ message: "Order successfully printed" });
+  } catch (ex) {
+    console.info("Error updating order", ex);
+    return res.status(400).json({ message: "Failed to print the order" });
   }
 });
 
