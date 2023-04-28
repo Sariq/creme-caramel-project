@@ -4,6 +4,9 @@ const orderid = require("order-id")("key");
 const textToImage = require("text-to-image");
 const websockets = require("../utils/websockets");
 const smsService = require("../utils/sms");
+const imagesService = require("../utils/images-service");
+var multer = require("multer");
+const upload = multer({ storage: multer.memoryStorage() });
 
 const axios = require("axios");
 
@@ -64,7 +67,7 @@ router.get(
         },
       });
     }
-    console.log("finalOrders",finalOrders)
+    console.log("finalOrders", finalOrders);
     // If API request, return json
     // if(req.apiAuthenticated){
     res.status(200).json(finalOrders);
@@ -168,115 +171,150 @@ router.get("/admin/order/create", restrict, async (req, res) => {
   });
 });
 
-router.post("/api/order/create", auth.required, async (req, res, next) => {
-  const customerId = req.auth.id;
-  const db = req.app.db;
-  const config = req.app.config;
-
-  // // Check if cart is empty
-  // if(!req.session.cart){
-  //     res.status(400).json({
-  //         message: 'The cart is empty. You will need to add items to the cart first.'
-  //     });
-  // }
-  const generatedOrderId = orderid.generate();
-  console.log("generatedOrderId", generatedOrderId);
-  const orderDoc = {
-    ...req.body,
-    created: new Date(),
-    customerId,
-    orderId: generatedOrderId,
-    status: "1",
-    isPrinted: false
-  };
-  console.log("orderDoc", orderDoc);
-
-  // insert order into DB
-  try {
-    const newDoc = await db.orders.insertOne(orderDoc);
-
-    // get the new ID
-    const orderId = newDoc.insertedId;
-    const customer = await db.customers.findOne({
-      _id: getId(customerId),
-    });
-    if (!customer) {
-      res.status(400).json({
-        message: "Customer not found",
+router.post(
+  "/api/order/create",
+  upload.array("img"),
+  auth.required,
+  async (req, res, next) => {
+    const customerId = req.auth.id;
+    const db = req.app.db;
+    const config = req.app.config;
+    console.log("req.files", req.files);
+    const parsedBodey = JSON.parse(req.body.body);
+    // // Check if cart is empty
+    // if(!req.session.cart){
+    //     res.status(400).json({
+    //         message: 'The cart is empty. You will need to add items to the cart first.'
+    //     });
+    // }
+    const generatedOrderId = orderid.generate();
+    console.log("generatedOrderId", generatedOrderId);
+    let imagesList = [];
+    if (req.files && req.files.length > 0) {
+      imagesList = await imagesService.uploadImage(req.files, req, "orders");
+    }
+    let imageIndex = 0;
+    let updatedItemsWithImages = [];
+    if (imagesList?.length > 0) {
+       updatedItemsWithImages = parsedBodey.order.items.map((item) => {
+        if (item.clienImage) {
+          imageIndex++;
+          return {
+            ...item,
+            clienImage: imagesList[imageIndex-1],
+          };
+        }
+        return {
+          ...item,
+          clienImage: null,
+        };
       });
-      return;
     }
 
-    const updatedCustomer = await db.customers.findOneAndUpdate(
-      { _id: getId(customerId) },
-      {
-        $set: {
-          ...customer,
-          orders: customer.orders ? [...customer.orders, orderId] : [orderId],
-        },
+    const orderDoc = {
+      ...parsedBodey,
+      order: {
+        ...parsedBodey.order,
+        items:
+          updatedItemsWithImages?.length > 0
+            ? updatedItemsWithImages
+            : parsedBodey.order.items,
       },
-      { multi: false, returnOriginal: false }
-    );
-    orderDoc.order.items.forEach(async (item) => {
-      const product = await db.products.findOne({
-        _id: getId(item.item_id),
+      created: new Date(),
+      customerId,
+      orderId: generatedOrderId,
+      status: "1",
+      isPrinted: false,
+    };
+    console.log("orderDoc", orderDoc);
+
+    // insert order into DB
+    try {
+      const newDoc = await db.orders.insertOne(orderDoc);
+
+      // get the new ID
+      const orderId = newDoc.insertedId;
+      const customer = await db.customers.findOne({
+        _id: getId(customerId),
       });
-      const updatedProduct = { ...product, count: product.count - 1 };
-      await db.products.updateOne(
-        { _id: getId(item.item_id) },
-        { $set: updatedProduct },
-        {}
+      if (!customer) {
+        res.status(400).json({
+          message: "Customer not found",
+        });
+        return;
+      }
+
+      const updatedCustomer = await db.customers.findOneAndUpdate(
+        { _id: getId(customerId) },
+        {
+          $set: {
+            ...customer,
+            orders: customer.orders ? [...customer.orders, orderId] : [orderId],
+          },
+        },
+        { multi: false, returnOriginal: false }
       );
-      // Update the index
-      //     indexProducts(req.app).then(() => {
-      //       res
-      //         .status(200)
-      //         .json({ message: "Successfully saved", product: productDoc });
-      //     });
-      //   } catch (ex) {
-      //     res.status(400).json({ message: "Failed to save. Please try again" });
-      //   }
-    });
-    const smsContent = smsService.getOrderRecivedContent(
-      customer.fullName,
-      orderDoc.total,
-      orderDoc.order.receipt_method,
-      generatedOrderId,
-      orderDoc.app_language
-    );
-    smsService.sendSMS(customer.phone, smsContent, req);
-    console.log("fire websocket order")
-    const dataUri = await textToImage.generate(customer.fullName, {
-      maxWidth: 200,
-      textAlign: "center",
-    });
-    const finalOrderDoc = {
-      ...orderDoc,
-    customerDetails: {
-      name: customer.fullName,
-      phone: customer.phone,
-      recipetName: dataUri,
+      orderDoc.order.items.forEach(async (item) => {
+        const product = await db.products.findOne({
+          _id: getId(item.item_id),
+        });
+        const updatedProduct = { ...product, count: product.count - 1 };
+        await db.products.updateOne(
+          { _id: getId(item.item_id) },
+          { $set: updatedProduct },
+          {}
+        );
+        // Update the index
+        //     indexProducts(req.app).then(() => {
+        //       res
+        //         .status(200)
+        //         .json({ message: "Successfully saved", product: productDoc });
+        //     });
+        //   } catch (ex) {
+        //     res.status(400).json({ message: "Failed to save. Please try again" });
+        //   }
+      });
+      const smsContent = smsService.getOrderRecivedContent(
+        customer.fullName,
+        orderDoc.total,
+        orderDoc.order.receipt_method,
+        generatedOrderId,
+        orderDoc.app_language
+      );
+      smsService.sendSMS(customer.phone, smsContent, req);
+      console.log("fire websocket order");
+      const dataUri = await textToImage.generate(customer.fullName, {
+        maxWidth: 200,
+        textAlign: "center",
+      });
+      const finalOrderDoc = {
+        ...orderDoc,
+        customerDetails: {
+          name: customer.fullName,
+          phone: customer.phone,
+          recipetName: dataUri,
+        },
+      };
+      websockets.fireWebscoketEvent("new order", finalOrderDoc);
+
+      // https://www.waze.com/ul?ll=32.23930691837541,34.95049682449079&navigate=yes&zoom=17
+      // add to lunr index
+      indexOrders(req.app).then(() => {
+        // send the email with the response
+        // TODO: Should fix this to properly handle result
+        //sendEmail(req.session.paymentEmailAddr, `Your order with ${config.cartTitle}`, getEmailTemplate(paymentResults));
+        // redirect to outcome
+        res.status(200).json({
+          message: "Order created successfully",
+          orderId,
+        });
+      });
+    } catch (ex) {
+      console.log(ex);
+      res.status(400).json({ err: "Your order declined. Please try again" });
     }
   }
-    websockets.fireWebscoketEvent("new order", finalOrderDoc);
-
-    // https://www.waze.com/ul?ll=32.23930691837541,34.95049682449079&navigate=yes&zoom=17
-    // add to lunr index
-    indexOrders(req.app).then(() => {
-      // send the email with the response
-      // TODO: Should fix this to properly handle result
-      //sendEmail(req.session.paymentEmailAddr, `Your order with ${config.cartTitle}`, getEmailTemplate(paymentResults));
-      // redirect to outcome
-      res.status(200).json({
-        message: "Order created successfully",
-        orderId,
-      });
-    });
-  } catch (ex) {
-    console.log(ex);
-    res.status(400).json({ err: "Your order declined. Please try again" });
-  }
-});
+);
 
 // Admin section
 router.get("/admin/orders/filter/:search", restrict, async (req, res, next) => {
@@ -361,12 +399,12 @@ router.post("/api/order/update", auth.required, async (req, res) => {
 router.post("/api/order/printed", auth.required, async (req, res) => {
   const db = req.app.db;
   try {
-    console.log("PRINTED", req.body.orderId)
+    console.log("PRINTED", req.body.orderId);
     await db.orders.updateOne(
       {
         _id: getId(req.body.orderId),
       },
-      { $set: {isPrinted: true} },
+      { $set: { isPrinted: true } },
       { multi: false }
     );
     return res.status(200).json({ message: "Order successfully printed" });

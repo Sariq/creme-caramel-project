@@ -37,7 +37,7 @@ const spacesEndpoint = new AWS.Endpoint(
 
 const uploadFile = async (files, req, folderName) => {
   const db = req.app.db;
-  const amazonConfig = await db.amazonconfigs.findOne({app: "amazon"});
+  const amazonConfig = await db.amazonconfigs.findOne({ app: "amazon" });
   let locationslist = [];
   let counter = 0;
 
@@ -52,11 +52,11 @@ const uploadFile = async (files, req, folderName) => {
       },
     });
     files = files.filter((file) => file.originalname !== "existingImage");
-    console.log("X3")
+    console.log("X3");
     if (files.length > 0) {
       files.forEach(async (file, i) => {
         const fileName = `${new Date().getTime()}` + file.originalname;
-        const folder = folderName || 'products';
+        const folder = folderName || "products";
         const params = {
           Bucket: BUCKET_NAME, // The path to the directory you want to upload the object to, starting with your Space name.
           Key: `${folder}/${fileName}`, // Object key, referenced whenever you want to access this file later.
@@ -65,29 +65,30 @@ const uploadFile = async (files, req, folderName) => {
         };
 
         try {
-          console.log("X4")
+          console.log("X4");
 
           const data = await s3Client.send(new PutObjectCommand(params));
           locationslist.push({ uri: params.Key });
           counter++;
-          console.log("X5")
+          console.log("X5");
 
           if (counter === files.length) {
-            console.log("X6")
+            console.log("X6");
             resolve(locationslist);
           }
         } catch (err) {
           console.log("Error", err);
         }
       });
-    }else{
-      resolve(locationslist)
+    } else {
+      resolve(locationslist);
     }
   });
 };
+
 const deleteImages = async (images, req) => {
   const db = req.app.db;
-  const amazonConfig = await db.amazonconfigs.findOne({app: "amazon"});
+  const amazonConfig = await db.amazonconfigs.findOne({ app: "amazon" });
   return new Promise((resolve, reject) => {
     const s3Client = new S3Client({
       endpoint: "https://fra1.digitaloceanspaces.com", // Find your endpoint in the control panel, under Settings. Prepend "https://".
@@ -98,15 +99,15 @@ const deleteImages = async (images, req) => {
       },
     });
 
-    images?.forEach(async (img)=>{
-      const bucketParams = { Bucket: BUCKET_NAME , Key: img.uri };
+    images?.forEach(async (img) => {
+      const bucketParams = { Bucket: BUCKET_NAME, Key: img.uri };
       try {
         const data = await s3Client.send(new DeleteObjectCommand(bucketParams));
         console.log("Success. Object deleted.", data);
       } catch (err) {
         console.log("Error", err);
       }
-    })
+    });
     resolve(true);
   });
 };
@@ -123,23 +124,23 @@ router.post(
       imagesList = await uploadFile(req.files, req, "birthday");
     }
 
-    if(imagesList?.length > 0){
-      imagesList.forEach((image)=>{
+    if (imagesList?.length > 0) {
+      imagesList.forEach((image) => {
         const doc = {
           data: image,
-          type: "birthday"
-        }
+          type: "birthday",
+        };
         db.images.insertOne(doc);
-      })
-  
+      });
+
       res.status(200).json({
         message: "New product successfully created",
       });
-    }else{
+    } else {
       console.log(colors.red(`Error inserting images`));
       res.status(400).json({ message: "Error inserting images" });
     }
-}
+  }
 );
 // insert new product form action
 router.post(
@@ -160,12 +161,50 @@ router.post(
       categoryId: req.body.categoryId,
       descriptionAR: cleanHtml(req.body.descriptionAR),
       descriptionHE: cleanHtml(req.body.descriptionHE),
-      price: Number(req.body.price),
+      mediumPrice: Number(req.body.mediumPrice),
+      largePrice: Number(req.body.largePrice),
       count: Number(req.body.count),
       isInStore: req.body.isInStore === "false" ? false : true,
-      isSizes: req.body.isSizes === "false" ? false : true,
+      isUploadImage: req.body.isUploadImage === "false" ? false : true,
       createdAt: new Date(),
     };
+
+    doc.extras = {
+      ...doc.extras,
+      counter: {
+        type: "COUNTER",
+        value: 1,
+      },
+    };
+
+    doc.extras = {
+      ...doc.extras,
+      size: {
+        options: [
+          {
+            title: "medium",
+            price: doc.mediumPrice,
+          },
+          {
+            title: "large",
+            price: doc.largePrice,
+          },
+        ],
+        type: "oneChoice",
+        value: "medium",
+      },
+    };
+
+    if (doc.isUploadImage) {
+      doc.extras = {
+        ...doc.extras,
+        image: {
+          type: "uploadImage",
+          value: null,
+        },
+      };
+    }
+
     // doc.img = JSON.parse(req.body.img);
     // doc.img = req.body.img.filter(file=> !file.isNew)
     if (req.files && req.files.length > 1) {
@@ -197,7 +236,7 @@ router.post(
       const newDoc = await db.products.insertOne(doc);
       // get the new ID
       const newId = newDoc.insertedId;
-
+      websockets.fireWebscoketEvent();
       // add to lunr index
       indexProducts(req.app).then(() => {
         res.status(200).json({
@@ -219,27 +258,29 @@ router.post(
   async (req, res) => {
     const db = req.app.db;
 
-
     const product = await db.products.findOne({
       _id: getId(req.body.productId),
     });
-
-
 
     if (!product) {
       res.status(400).json({ message: "Failed to update product" });
       return;
     }
     let productDoc = {
-      name: req.body.name,
+      nameAR: req.body.nameAR,
+      nameHE: req.body.nameHE,
       categoryId: req.body.categoryId,
-      description: cleanHtml(req.body.description),
-      price: cleanHtml(req.body.price),
-      count: cleanHtml(req.body.count),
+      descriptionAR: cleanHtml(req.body.descriptionAR),
+      descriptionHE: cleanHtml(req.body.descriptionHE),
+      mediumPrice: Number(req.body.mediumPrice),
+      largePrice: Number(req.body.largePrice),
+      count: Number(req.body.count),
+      isInStore: req.body.isInStore === "false" ? false : true,
+      isUploadImage: req.body.isUploadImage === "false" ? false : true,
       updatedAt: new Date(),
     };
     if (req.files) {
-      if(req.files.length > 0){
+      if (req.files.length > 0) {
         productDoc.img = await uploadFile(req.files, req);
         await deleteImages(product.img, req);
       }
@@ -328,33 +369,32 @@ router.post(
 // delete a product
 router.post("/api/admin/product/delete", async (req, res) => {
   const db = req.app.db;
-  try{
+  try {
     const objectIdsList = req.body.productsIdsList.map((id) => {
       return getId(id);
     });
 
+    const results = await db.products
+      .find({ _id: { $in: objectIdsList } })
+      .toArray();
 
+    await results.forEach(async (product) => {
+      await deleteImages(product.img, req);
+    });
+    await db.products.deleteMany({ _id: { $in: objectIdsList } }, {});
+    websockets.fireWebscoketEvent();
 
-  const results = await db.products
-  .find({ _id: { $in: objectIdsList } })
-  .toArray();
+    // Remove the variants
+    //await db.variants.deleteMany({ product: getId(req.body.productId) }, {});
 
-  await results.forEach(async (product)=>{
-    await deleteImages(product.img, req);
-  });
-  await db.products.deleteMany({ _id: { $in: objectIdsList } }, {});
-
-  // Remove the variants
-  //await db.variants.deleteMany({ product: getId(req.body.productId) }, {});
-
-  // re-index products
-  indexProducts(req.app).then(() => {
-    res.status(200).json({ message: "Product successfully deleted" });
-  });
-}catch(e){
-  console.log(e)
-  res.status(200).json({ message: e });
-}
+    // re-index products
+    indexProducts(req.app).then(() => {
+      res.status(200).json({ message: "Product successfully deleted" });
+    });
+  } catch (e) {
+    console.log(e);
+    res.status(200).json({ message: e });
+  }
   // });
 });
 
@@ -683,8 +723,6 @@ router.post(
   }
 );
 
-
-
 // update the published state based on an ajax call from the frontend
 router.post(
   "/admin/product/publishedState",
@@ -786,25 +824,18 @@ router.post(
 );
 
 // get images by type
-router.post(
-  "/api/images",
-  async (req, res, next) => {
-    const db = req.app.db;
+router.post("/api/images", async (req, res, next) => {
+  const db = req.app.db;
 
-    console.log("req.body.type",req.body.type)
-    try{
-      const results = await db.images
-      .find({ type: req.body.type })
-      .toArray();
-      res.status(200).json(results);
-    }catch(e){
-      console.log(colors.red(`Error getting images`, e));
+  console.log("req.body.type", req.body.type);
+  try {
+    const results = await db.images.find({ type: req.body.type }).toArray();
+    res.status(200).json(results);
+  } catch (e) {
+    console.log(colors.red(`Error getting images`, e));
 
-      res.status(400).json({ message: "Error getting images" });
-    }
-
-}
-);
-
+    res.status(400).json({ message: "Error getting images" });
+  }
+});
 
 module.exports = router;

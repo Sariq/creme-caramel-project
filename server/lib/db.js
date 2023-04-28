@@ -39,6 +39,7 @@ function initDb(dbUrl, callback){ // eslint-disable-line
         db.discounts = db.collection('discounts');
         db.reviews = db.collection('reviews');
         db.amazonconfigs = db.collection('amazonconfigs');
+        db.locationPolygon = db.collection('location-polygon');
         db.store = db.collection('store');
         db.calander = db.collection('calander');
         db.images = db.collection('images');

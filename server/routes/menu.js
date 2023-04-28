@@ -34,7 +34,7 @@ router.get("/api/menu", async (req, res, next) => {
       const menu = categories.data.map((category)=>{
           const tempCat = {
               ...category,
-              products: products.data.filter((product)=> product.categoryId == category._id)
+              products: products.data.filter((product)=> product.categoryId == category.categoryId)
           }
           return tempCat;
       })
