@@ -161,9 +161,10 @@ router.post(
       categoryId: req.body.categoryId,
       descriptionAR: cleanHtml(req.body.descriptionAR),
       descriptionHE: cleanHtml(req.body.descriptionHE),
-      mediumPrice: Number(req.body.mediumPrice),
-      largePrice: Number(req.body.largePrice),
-      count: Number(req.body.count),
+      // mediumPrice: Number(req.body.mediumPrice),
+      // largePrice: Number(req.body.largePrice),
+      // mediumCount: Number(req.body.mediumCount),
+      // largeCount: Number(req.body.largeCount),
       isInStore: req.body.isInStore === "false" ? false : true,
       isUploadImage: req.body.isUploadImage === "false" ? false : true,
       createdAt: new Date(),
@@ -180,16 +181,16 @@ router.post(
     doc.extras = {
       ...doc.extras,
       size: {
-        options: [
-          {
-            title: "medium",
-            price: doc.mediumPrice,
+        options: {
+          medium:{
+            price: Number(req.body.mediumPrice),
+            count: Number(req.body.mediumCount)
           },
-          {
-            title: "large",
-            price: doc.largePrice,
-          },
-        ],
+          large: {
+            price: Number(req.body.largePrice),
+            count: Number(req.body.largeCount)
+          }
+        },
         type: "oneChoice",
         value: "medium",
       },
@@ -272,9 +273,10 @@ router.post(
       categoryId: req.body.categoryId,
       descriptionAR: cleanHtml(req.body.descriptionAR),
       descriptionHE: cleanHtml(req.body.descriptionHE),
-      mediumPrice: Number(req.body.mediumPrice),
-      largePrice: Number(req.body.largePrice),
-      count: Number(req.body.count),
+      // mediumPrice: Number(req.body.mediumPrice),
+      // largePrice: Number(req.body.largePrice),
+      // mediumCount: Number(req.body.mediumCount),
+      // largeCount: Number(req.body.largeCount),
       isInStore: req.body.isInStore === "false" ? false : true,
       isUploadImage: req.body.isUploadImage === "false" ? false : true,
       updatedAt: new Date(),
@@ -284,6 +286,35 @@ router.post(
         productDoc.img = await uploadFile(req.files, req);
         await deleteImages(product.img, req);
       }
+    }
+
+
+    productDoc.extras = {
+      ...productDoc.extras,
+      size: {
+        options: {
+          medium:{
+            price: Number(req.body.mediumPrice),
+            count: Number(req.body.mediumCount)
+          },
+          large: {
+            price: Number(req.body.largePrice),
+            count: Number(req.body.largeCount)
+          }
+        },
+        type: "oneChoice",
+        value: "medium",
+      },
+    };
+
+    if (productDoc.isUploadImage) {
+      productDoc.extras = {
+        ...productDoc.extras,
+        image: {
+          type: "uploadImage",
+          value: null,
+        },
+      };
     }
 
     try {

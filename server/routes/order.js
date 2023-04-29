@@ -196,12 +196,12 @@ router.post(
     let imageIndex = 0;
     let updatedItemsWithImages = [];
     if (imagesList?.length > 0) {
-       updatedItemsWithImages = parsedBodey.order.items.map((item) => {
+      updatedItemsWithImages = parsedBodey.order.items.map((item) => {
         if (item.clienImage) {
           imageIndex++;
           return {
             ...item,
-            clienImage: imagesList[imageIndex-1],
+            clienImage: imagesList[imageIndex - 1],
           };
         }
         return {
@@ -258,7 +258,11 @@ router.post(
         const product = await db.products.findOne({
           _id: getId(item.item_id),
         });
-        const updatedProduct = { ...product, count: product.count - 1 };
+
+        let updatedProduct = {};
+        product.extras.size.options[item.size].count =
+          product.extras.size.options[item.size].count - item.qty ;
+        updatedProduct = { ...product };
         await db.products.updateOne(
           { _id: getId(item.item_id) },
           { $set: updatedProduct },
