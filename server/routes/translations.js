@@ -1,65 +1,77 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
 const colors = require("colors");
 
-const {
-    paginateData
-} = require('../lib/paginate');
+const { paginateData } = require("../lib/paginate");
 
 const a = {
-    "key1": {
-        "ar":" aa",
-        "he": "bb"
-    },
-    "key2": {
-        "ar":" aa",
-        "he": "bb"
-    }
-}
+  key1: {
+    ar: " aa",
+    he: "bb",
+  },
+  key2: {
+    ar: " aa",
+    he: "bb",
+  },
+};
 
-router.post("/api/admin/translte/add", async (req, res) => {
-    const db = req.app.db;
-    const translationsJson = req.body;
+router.get("/api/getTranslations", async (req, res, next) => {
+  const db = req.app.db;
 
-    try {
-        await db.calander.insertOne(calanderObj);
-          res.status(200).json(calanderObj);
-      } catch (ex) {
-        console.error(colors.red("Failed to insert calander disable hour: ", ex));
-        res.status(400).json({
-          message: "Customer creation failed.",
-        });
-      }
-
-});
-
-router.post("/api/admin/calander/enable/hour", async (req, res) => {
-    const db = req.app.db;
-    const calanderObj = {
-      date: req.body.date,
-      hour: req.body.hour,
-    };
-
-    try{
-        const updateobj = { isDisabled: false };
-        await db.calander.deleteOne({
-            date: calanderObj.date, hour: calanderObj.hour });
-        return res.status(200).json({ message: 'Disabled Hour enabled successfully updated' });
-    }catch(ex){
-        console.info('Error updating calander enable hour', ex);
-    }
-
-});
-
-router.get("/api/admin/calander/disabled/hours/:date", async (req, res, next) => {
-    const db = req.app.db;
-    const date = req.params.date;
-
-    const calander = await db.calander
-    .find({ date: date })
+  const dbTranslations = await db.translations
+    .find()
     // .sort({ created: -1 })
     .toArray();
-    res.status(200).json(calander);
+  const arTranslations = {};
+  const heTranslations = {};
+
+  dbTranslations.forEach((element) => {
+    arTranslations[element.key] = element.ar || element.key;
+    heTranslations[element.key] = element.he || element.key;
+  });
+
+  const translations = {
+    arTranslations,
+    heTranslations,
+  };
+
+  res.status(200).json(translations);
+});
+
+router.post("/api/translations/update", async (req, res, next) => {
+  const db = req.app.db;
+  const doc = req.body;
+
+  await db.translations.updateOne(
+    { key: doc.key },
+    {
+      $set: {
+        ar: doc.ar,
+        he: doc.he,
+      },
+    },
+    { multi: false }
+  );
+
+  const dbTranslations = await db.translations
+    .find()
+    // .sort({ created: -1 })
+    .toArray();
+
+  const arTranslations = {};
+  const heTranslations = {};
+
+  dbTranslations.forEach((element) => {
+    arTranslations[element.key] = element.ar || element.key;
+    heTranslations[element.key] = element.he || element.key;
+  });
+
+  const translations = {
+    arTranslations,
+    heTranslations,
+  };
+
+  res.status(200).json(translations);
 });
 
 module.exports = router;

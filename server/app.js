@@ -53,6 +53,7 @@ const product = require("./routes/product");
 const menu = require("./routes/menu");
 const customer = require("./routes/customer");
 const calander = require("./routes/calander");
+const translations = require("./routes/translations");
 const geo = require("./routes/geo");
 const store = require("./routes/store");
 const order = require("./routes/order");
@@ -91,6 +92,7 @@ app.use((req, res, next) => {
 app.use("/", index);
 app.use("/", customer);
 app.use("/", calander);
+app.use("/", translations);
 app.use("/", geo);
 app.use("/", store);
 app.use("/", category);

@@ -18,7 +18,7 @@ router.post("/api/geo/isValidGeo", async (req, res) => {
       .status(200)
       .json({ message: "valid location", data: isValidLocation });
   } catch (ex) {
-    console.info("Error updating calander enable hour", ex);
+    console.info("Error validating calander", ex);
   }
 });
 
