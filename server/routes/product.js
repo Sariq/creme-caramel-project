@@ -288,7 +288,13 @@ router.post(
       }
     }
 
-
+    productDoc.extras = {
+      ...productDoc.extras,
+      counter: {
+        type: "COUNTER",
+        value: 1,
+      },
+    };
     productDoc.extras = {
       ...productDoc.extras,
       size: {
