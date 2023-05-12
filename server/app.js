@@ -233,7 +233,7 @@ initDb(config.databaseConnectionString, async (err, db) => {
   // Start the app
   try {
     const server = await app.listen(app.get("port"));
-
+    console.log("APPJS")
     websockets.initWebSockets(server);
 
  
