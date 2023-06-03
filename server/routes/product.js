@@ -118,9 +118,10 @@ router.post(
   upload.array("img"),
   async (req, res, next) => {
     const db = req.app.db;
+    const body = { ...req.body };
 
     let imagesList = [];
-    if (req.files && req.files.length > 1) {
+    if (req.files && req.files.length > 0) {
       imagesList = await uploadFile(req.files, req, "birthday");
     }
 
@@ -129,6 +130,7 @@ router.post(
         const doc = {
           data: image,
           type: "birthday",
+          subType: body.subType
         };
         db.images.insertOne(doc);
       });
