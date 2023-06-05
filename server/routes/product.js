@@ -172,6 +172,9 @@ router.post(
       createdAt: new Date(),
     };
 
+    if(req.body.subCategoryId){
+      doc.subCategoryId = req.body.subCategoryId;
+    }
     doc.extras = {
       ...doc.extras,
       counter: {
@@ -275,6 +278,7 @@ router.post(
       categoryId: req.body.categoryId,
       descriptionAR: cleanHtml(req.body.descriptionAR),
       descriptionHE: cleanHtml(req.body.descriptionHE),
+      subCategoryId: req.body.subCategoryId,
       // mediumPrice: Number(req.body.mediumPrice),
       // largePrice: Number(req.body.largePrice),
       // mediumCount: Number(req.body.mediumCount),
