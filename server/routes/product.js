@@ -315,7 +315,7 @@ router.post(
           }
         },
         type: "oneChoice",
-        value: "medium",
+        value: req.body.mediumCount > 0 ? "medium" : "large",
       },
     };
 
