@@ -1,5 +1,7 @@
 const express = require('express');
 const router = express.Router();
+const _ = require('lodash');
+
 const {
     paginateData
 } = require('../lib/paginate');
@@ -28,8 +30,17 @@ router.get("/api/menu", async (req, res, next) => {
         { productAddedDate: -1 }
       );
       const productsImagesList = [];
+     const grouped =  _.groupBy(products.data, 'categoryId');
+
+     Object.entries(grouped).forEach(([key, value]) => {
+      grouped[key] = value.map((product)=> `https://creme-caramel-images.fra1.cdn.digitaloceanspaces.com/${product.img[0].uri}`)
+    });
+     //delete grouped['5'];
+      console.log("grouped",grouped)
       products.data.forEach(product => {
-        productsImagesList.push(`https://creme-caramel-images.fra1.cdn.digitaloceanspaces.com/${product.img[0].uri}`)
+        if(product.categoryId != '5'){
+          productsImagesList.push(`https://creme-caramel-images.fra1.cdn.digitaloceanspaces.com/${product.img[0].uri}`)
+        }
       });
       const menu = categories.data.map((category)=>{
           const tempCat = {
@@ -38,7 +49,7 @@ router.get("/api/menu", async (req, res, next) => {
           }
           return tempCat;
       })
-    res.status(200).json({menu:menu, productsImagesList: productsImagesList});
+    res.status(200).json({menu:menu, productsImagesList: productsImagesList, categoryImages: grouped});
 });
 
 module.exports = router;
