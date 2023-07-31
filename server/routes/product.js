@@ -201,6 +201,14 @@ router.post(
       },
     };
 
+    doc.extras = {
+      ...doc.extras,
+      taste: {
+        type: "dropDown",
+        value: "",
+      },
+    };
+
     if (doc.isUploadImage) {
       doc.extras = {
         ...doc.extras,
