@@ -200,14 +200,21 @@ router.post(
         value: "medium",
       },
     };
+    
+    if(req.body.categoryId== "5" && req.body.subCategoryId != "1" && req.body.cakeLevels){
+      const levels = {};
+      for (let i = 0; i <= cakeLevels; i++) {
+        levels[i + 1] = null;
+      }
+      doc.extras = {
+        ...doc.extras,
+        taste: {
+          type: "dropDown",
+          value: levels,
+        },
+      };
+    }
 
-    doc.extras = {
-      ...doc.extras,
-      taste: {
-        type: "dropDown",
-        value: "",
-      },
-    };
 
     if (doc.isUploadImage) {
       doc.extras = {
@@ -333,6 +340,21 @@ router.post(
         image: {
           type: "uploadImage",
           value: null,
+        },
+      };
+    }
+
+    if(req.body.categoryId== "5" && req.body.subCategoryId != "1" && req.body.cakeLevels){
+      const levels = {};
+      for (let i = 0; i <= req.body.cakeLevels; i++) {
+        levels[i + 1] = null;
+      }
+      productDoc.extras = {
+        ...productDoc.extras,
+        taste: {
+          type: "dropDown",
+          value: {},
+          options: levels
         },
       };
     }
