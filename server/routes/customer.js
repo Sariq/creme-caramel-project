@@ -124,6 +124,10 @@ router.post("/api/customer/create", async (req, res) => {
   // email is ok to be used.
   try {
     const newCustomer = await db.customers.insertOne(customerObj);
+    if(customer.phone !== "0542454362" && customer.phone !== "0528602121"){
+      const smsContent = smsService.getVerifyCodeContent(random4DigitsCode);
+      smsService.sendSMS(customer.phone, smsContent, req);
+    }
     indexCustomers(req.app).then(() => {
       // Return the new customer
       // const customerReturn = newCustomer.ops[0];
@@ -138,6 +142,61 @@ router.post("/api/customer/create", async (req, res) => {
 
       // // Return customer oject
       res.status(200).json(customerObj);
+    });
+  } catch (ex) {
+    console.error(colors.red("Failed to insert customer: ", ex));
+    res.status(400).json({
+      message: "Customer creation failed.",
+    });
+  }
+});
+
+// insert a customer
+router.post("/api/customer/admin-create", async (req, res) => {
+  const db = req.app.db;
+  // send code sms
+  const customerObj = {
+    phone: sanitize(req.body.phone),
+    created: new Date(),
+  };
+
+  const schemaResult = validateJson("newCustomer", customerObj);
+  if (!schemaResult.result) {
+    res.status(400).json(schemaResult.errors);
+    return;
+  }
+
+  // check for existing customer
+  const customer = await db.customers.findOne({ phone: req.body.phone });
+  if (customer) {
+    const updatedCustomer = await db.customers.findOneAndUpdate(
+      { phone: req.body.phone },
+      {
+        $set: { ...customer, authCode: random4DigitsCode, token: null },
+      },
+      { multi: false, returnOriginal: false }
+    );
+    res.status(200).json({ phone: req.body.phone });
+    // if(customer.phone !== "0542454362" && customer.phone !== "0528602121"){
+    //   const smsContent = smsService.getVerifyCodeContent(random4DigitsCode);
+    //   smsService.sendSMS(customer.phone, smsContent, req);
+    // }
+    // res.status(400).json({
+    //   message: "A customer already exists with that phone number",
+    // });
+    return;
+  }
+  // email is ok to be used.
+  try {
+    indexCustomers(req.app).then(async () => {
+      const newCustomer = await db.customers.insertOne(customerObj);
+
+      // get the new ID
+      const customerInsertedId = newCustomer.insertedId;
+      const customer = await db.customers.findOne({
+        _id: getId(customerInsertedId),
+      });
+      res.status(200).json({ phone: customer.phone, fullName: customer.fullName, isAdmin: customer.isAdmin, customerId: customer._id });
     });
   } catch (ex) {
     console.error(colors.red("Failed to insert customer: ", ex));
@@ -282,9 +341,8 @@ router.get("/api/customer/details", auth.required, async (req, res) => {
 
 // Update a customer
 router.post("/api/customer/update-name", auth.required, async (req, res) => {
-  const customerId = req.auth.id;
+  const customerId = req.body.customerId || req.auth.id;
   const db = req.app.db;
-
   const customerObj = {
     fullName: req.body.fullName,
   };
@@ -816,6 +874,28 @@ router.get("/customer/logout", (req, res) => {
   // Clear our session
   clearCustomer(req);
   res.redirect("/customer/login");
+});
+
+
+router.post("/api/customer/search-customer", async (req, res) => {
+  const db = req.app.db;
+  const searchQuery = req.body.searchQuery;
+  const query = {
+    $or: [
+      { phone: { $regex: searchQuery, $options: 'i' } }, // Case-insensitive regex search
+      { fullName: { $regex: searchQuery, $options: 'i' } }
+    ]
+  };
+  const customer = await db.customers.find(query).toArray();
+
+  try {
+      res.status(200).json(customer);
+  } catch (ex) {
+    console.error(colors.red("Failed to search customer: ", ex));
+    res.status(400).json({
+      message: "Customer search failed.",
+    });
+  }
 });
 
 module.exports = router;

@@ -52,20 +52,21 @@ router.get(
       const customer = await db.customers.findOne({
         _id: getId(order.customerId),
       });
+      if (customer) {
+        const dataUri = await textToImage.generate(customer.fullName, {
+          maxWidth: 200,
+          textAlign: "center",
+        });
 
-      const dataUri = await textToImage.generate(customer.fullName, {
-        maxWidth: 200,
-        textAlign: "center",
-      });
-
-      finalOrders.push({
-        ...order,
-        customerDetails: {
-          name: customer.fullName,
-          phone: customer.phone,
-          recipetName: dataUri,
-        },
-      });
+        finalOrders.push({
+          ...order,
+          customerDetails: {
+            name: customer.fullName,
+            phone: customer.phone,
+            recipetName: dataUri,
+          },
+        });
+      }
     }
     console.log("finalOrders", finalOrders);
     // If API request, return json
@@ -176,11 +177,11 @@ router.post(
   upload.array("img"),
   auth.required,
   async (req, res, next) => {
-    const customerId = req.auth.id;
     const db = req.app.db;
     const config = req.app.config;
-    console.log("req.files", req.files);
     const parsedBodey = JSON.parse(req.body.body);
+    const customerId = parsedBodey.customerId || req.auth.id;
+
     // // Check if cart is empty
     // if(!req.session.cart){
     //     res.status(400).json({
@@ -188,7 +189,6 @@ router.post(
     //     });
     // }
     const generatedOrderId = orderid.generate();
-    console.log("generatedOrderId", generatedOrderId);
     let imagesList = [];
     if (req.files && req.files.length > 0) {
       imagesList = await imagesService.uploadImage(req.files, req, "orders");
@@ -226,7 +226,6 @@ router.post(
       status: "1",
       isPrinted: false,
     };
-    console.log("orderDoc", orderDoc);
 
     // insert order into DB
     try {
@@ -261,7 +260,7 @@ router.post(
 
         let updatedProduct = {};
         product.extras.size.options[item.size].count =
-          product.extras.size.options[item.size].count - item.qty ;
+          product.extras.size.options[item.size].count - item.qty;
         updatedProduct = { ...product };
         await db.products.updateOne(
           { _id: getId(item.item_id) },
