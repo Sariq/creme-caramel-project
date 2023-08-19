@@ -36,7 +36,6 @@ router.get("/api/menu", async (req, res, next) => {
       grouped[key] = value.map((product)=> `https://creme-caramel-images.fra1.cdn.digitaloceanspaces.com/${product.img[0].uri}`)
     });
      //delete grouped['5'];
-      console.log("grouped",grouped)
       products.data.forEach(product => {
         if(product.categoryId != '5'){
           productsImagesList.push(`https://creme-caramel-images.fra1.cdn.digitaloceanspaces.com/${product.img[0].uri}`)

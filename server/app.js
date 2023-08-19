@@ -85,6 +85,8 @@ app.use(express.json({}));
 // Make stuff accessible to our router
 app.use((req, res, next) => {
   //req.handlebars = handlebars;
+  console.log(`Incoming request: ${req.method} ${req.url}`);
+
   next();
 });
 

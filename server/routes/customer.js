@@ -5,6 +5,7 @@ const randtoken = require("rand-token");
 const bcrypt = require("bcryptjs");
 const auth = require("./auth");
 const smsService = require("../utils/sms");
+const { paginateData } = require("../lib/paginate");
 
 const passport = require("passport");
 const authService = require("../utils/auth-service");
@@ -256,7 +257,7 @@ router.get("/customer/account", async (req, res) => {
   res.status(200).json(orders);
 });
 
-router.get("/api/customer/orders", auth.required, async (req, res) => {
+router.post("/api/customer/orders", auth.required, async (req, res) => {
   const customerId = req.auth.id;
   const db = req.app.db;
 
@@ -287,13 +288,24 @@ router.get("/api/customer/orders", auth.required, async (req, res) => {
         oids.push(getId(item));
       });
   
-      const orders = await db.orders
-        .find({
+      const orders = await paginateData(
+        true,
+        req,
+        1,
+        "orders",
+        {
           _id: { $in: oids },
-        })
-        .sort({ orderDate: -1 })
-        .toArray();
-        res.status(200).json(orders);
+        },
+        { created: -1 }
+      );
+      res.status(200).json(orders);
+      // const orders = await db.orders
+      //   .find({
+      //     _id: { $in: oids },
+      //   })
+      //   .sort({ orderDate: -1 })
+      //   .toArray();
+      //   res.status(200).json(orders);
     }else{
       res.status(200).json([]);
     }
@@ -331,7 +343,7 @@ router.get("/api/customer/details", auth.required, async (req, res) => {
     }
     res.status(200).json({
       message: "Customer updated",
-      data: { phone: customer.phone, fullName: customer.fullName, isAdmin: customer.isAdmin },
+      data: { phone: customer.phone, fullName: customer.fullName, isAdmin: customer.isAdmin, customerId },
     });
   } catch (ex) {
     console.error(colors.red(`Failed get customer: ${ex}`));

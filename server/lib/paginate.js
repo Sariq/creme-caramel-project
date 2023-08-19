@@ -10,13 +10,10 @@ const {
  * @param  {object} query // The mongo query
  * @param  {object} sort // The mongo sort
  */
-const paginateData = (frontend, req, page, collection, query, sort) => {
+const paginateData = (isPagenate, req, page, collection, query, sort) => {
     const db = req.app.db;
     const config = getConfig();
-    let numberItems = 10;
-    if(frontend){
-        numberItems = config.productsPerPage ? config.productsPerPage : 6;
-    }
+    let numberItems = isPagenate ? 20: 100;
 
     let skip = 0;
     if(page > 1){
@@ -32,7 +29,7 @@ const paginateData = (frontend, req, page, collection, query, sort) => {
 
     // Run our queries
     return Promise.all([
-        db[collection].find(query).sort(sort).toArray(),
+        db[collection].find(query).skip(skip).limit(parseInt(numberItems)).sort(sort).toArray(),
         db[collection].countDocuments(query)
     ])
     .then((result) => {

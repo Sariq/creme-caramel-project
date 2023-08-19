@@ -24,23 +24,42 @@ initWebSockets = function (server) {
   //   A new client connection request received
   wsServer.on("connection", function (connection, req) {
     // Generate a unique code for every user
-    const userId = uuid.v4();
+    const queryParam = req.url?.split('=')[1];
+    let customerId = null;
+    if(queryParam && queryParam != 'undefined'){
+      customerId = req.url?.split('=')[1];
+    }
+    const userId = customerId || uuid.v4();
     console.log(`Recieved a new connection.`, connection);
     clients[userId]=connection;
     // Store the new connection and handle messages
     // console.log(`${userId} connected.`);
   });
 };
-fireWebscoketEvent = function (type = 'general', data = {}) {
+fireWebscoketEvent = function (type = 'general', data = {}, customersIds = null) {
   console.log("clients", clients);
-
   const message = JSON.stringify({ type: type, data: data });
-  for (let userId in clients) {
-    let client = clients[userId];
-    //if (client.readyState === WebSocket.OPEN) {
-      client.send(message);
-    //}
+
+  if(customersIds){
+    customersIds.forEach((customerId)=>{
+      let client = clients[customerId];
+      //if (client.readyState === WebSocket.OPEN) {
+        if(client){
+          client.send(message);
+        }
+      //}
+    })
+  }else{
+    for (let userId in clients) {
+      let client = clients[userId];
+      //if (client.readyState === WebSocket.OPEN) {
+        if(client){
+          client.send(message);
+        }
+      //}
+    }
   }
+
 
 };
 const websocket = {

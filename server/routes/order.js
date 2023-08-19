@@ -26,7 +26,7 @@ const { indexOrders } = require("../lib/indexing");
 const router = express.Router();
 
 // Show orders
-router.get(
+router.post(
   "/api/order/admin/orders/:page?",
   auth.required,
   async (req, res, next) => {
@@ -38,14 +38,19 @@ router.get(
       pageNum = req.params.page;
     }
 
+    let statusList = ["1","2","3","4","5"];
+    if (req.body.statusList) {
+      statusList = req.body.statusList;
+    }
+
     // Get our paginated data
     const orders = await paginateData(
-      false,
+      true,
       req,
       pageNum,
       "orders",
-      {},
-      { orderDate: 1 }
+      { status: { $in: statusList } },
+      { created: -1 }
     );
     // orders?.data?.forEach(async (order)=>{
     for (const order of orders?.data) {
@@ -392,6 +397,10 @@ router.post("/api/order/update", auth.required, async (req, res) => {
       { $set: updateobj },
       { multi: false }
     );
+    const order = await db.orders.findOne({ _id: getId(req.body.orderId) });
+    const customerId = order.customerId;
+    websockets.fireWebscoketEvent("order status updated", updateobj,[customerId]);
+
     return res.status(200).json({ message: "Order successfully updated" });
   } catch (ex) {
     console.info("Error updating order", ex);
