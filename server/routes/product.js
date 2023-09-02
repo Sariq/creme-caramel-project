@@ -163,6 +163,8 @@ router.post(
       categoryId: req.body.categoryId,
       descriptionAR: cleanHtml(req.body.descriptionAR),
       descriptionHE: cleanHtml(req.body.descriptionHE),
+      notInStoreDescriptionAR: cleanHtml(req.body.notInStoreDescriptionAR),
+      notInStoreDescriptionHE: cleanHtml(req.body.notInStoreDescriptionHE),
       // mediumPrice: Number(req.body.mediumPrice),
       // largePrice: Number(req.body.largePrice),
       // mediumCount: Number(req.body.mediumCount),
@@ -203,7 +205,7 @@ router.post(
     
     if(req.body.categoryId== "5" && req.body.subCategoryId != "1" && req.body.cakeLevels){
       const levels = {};
-      for (let i = 0; i <= cakeLevels; i++) {
+      for (let i = 0; i <=  Number(req.body.cakeLevels); i++) {
         levels[i + 1] = null;
       }
       doc.extras = {
@@ -214,7 +216,6 @@ router.post(
         },
       };
     }
-
 
     if (doc.isUploadImage) {
       doc.extras = {
@@ -293,6 +294,8 @@ router.post(
       categoryId: req.body.categoryId,
       descriptionAR: cleanHtml(req.body.descriptionAR),
       descriptionHE: cleanHtml(req.body.descriptionHE),
+      notInStoreDescriptionAR: cleanHtml(req.body.notInStoreDescriptionAR),
+      notInStoreDescriptionHE: cleanHtml(req.body.notInStoreDescriptionHE),
       subCategoryId: req.body.subCategoryId,
       // mediumPrice: Number(req.body.mediumPrice),
       // largePrice: Number(req.body.largePrice),
@@ -302,6 +305,12 @@ router.post(
       isUploadImage: req.body.isUploadImage === "false" ? false : true,
       updatedAt: new Date(),
     };
+
+    if(req.body.activeTastes){
+      const parsedActiveTastes = req.body.activeTastes.split(",");
+      productDoc.activeTastes = parsedActiveTastes;
+    }
+
     if (req.files) {
       if (req.files.length > 0) {
         productDoc.img = await uploadFile(req.files, req);
@@ -355,6 +364,17 @@ router.post(
           type: "dropDown",
           value: {},
           options: levels
+        },
+      };
+    }
+
+    if(req.body.productId == "647e63a81cef6b000d34be4c"){
+      productDoc.extras = {
+        ...productDoc.extras,
+        taste: {
+          type: "dropDown",
+          value: {},
+          options: {"1": null}
         },
       };
     }

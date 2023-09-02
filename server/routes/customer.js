@@ -47,7 +47,9 @@ router.post("/api/customer/validateAuthCode", async (req, res) => {
   if (
     customer.authCode == customerObj.authCode ||
     (customerObj.phone === "0542454362" && customerObj.authCode === "1234") || 
-    (customerObj.phone === "0528602121" && customerObj.authCode === "1234")
+    (customerObj.phone === "0528602121" && customerObj.authCode === "1234") || 
+    (customerObj.phone === "1234567891" && customerObj.authCode === "1234") || 
+    (customerObj.phone === "1234567892" && customerObj.authCode === "1234")
 
   ) {
     const customerNewUpdate = {
@@ -113,7 +115,7 @@ router.post("/api/customer/create", async (req, res) => {
       { multi: false, returnOriginal: false }
     );
     res.status(200).json({ phone: req.body.phone });
-    if(customer.phone !== "0542454362" && customer.phone !== "0528602121"){
+    if(customer.phone !== "0542454362" && customer.phone !== "0528602121" && customer.phone !== "1234567891" && customer.phone !== "1234567892"){
       const smsContent = smsService.getVerifyCodeContent(random4DigitsCode);
       smsService.sendSMS(customer.phone, smsContent, req);
     }
@@ -125,7 +127,7 @@ router.post("/api/customer/create", async (req, res) => {
   // email is ok to be used.
   try {
     const newCustomer = await db.customers.insertOne(customerObj);
-    if(customer.phone !== "0542454362" && customer.phone !== "0528602121"){
+    if(customer.phone !== "0542454362" && customer.phone !== "0528602121" && customer.phone !== "1234567891" && customer.phone !== "1234567892"){
       const smsContent = smsService.getVerifyCodeContent(random4DigitsCode);
       smsService.sendSMS(customer.phone, smsContent, req);
     }
@@ -343,7 +345,7 @@ router.get("/api/customer/details", auth.required, async (req, res) => {
     }
     res.status(200).json({
       message: "Customer updated",
-      data: { phone: customer.phone, fullName: customer.fullName, isAdmin: customer.isAdmin, customerId },
+      data: { phone: customer.phone, fullName: customer.fullName, isAdmin: customer.isAdmin, customerId, roles: customer.roles },
     });
   } catch (ex) {
     console.error(colors.red(`Failed get customer: ${ex}`));

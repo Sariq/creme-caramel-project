@@ -23,6 +23,7 @@ const { paginateData } = require("../lib/paginate");
 const { emptyCart } = require("../lib/cart");
 const { restrict, checkAccess } = require("../lib/auth");
 const { indexOrders } = require("../lib/indexing");
+const moment = require("moment");
 const router = express.Router();
 
 // Show orders
@@ -38,20 +39,32 @@ router.post(
       pageNum = req.params.page;
     }
 
-    let statusList = ["1","2","3","4","5"];
+    let statusList = ["1", "2", "3", "4", "5"];
     if (req.body.statusList) {
       statusList = req.body.statusList;
     }
+    let ordersDate = null;
+    if (req.body.ordersDate) {
+      ordersDate = req.body.ordersDate;
+    }
+    let filterBy = {
+      status: { $in: statusList },
+    };
+    if (ordersDate) {
+      var start = moment.utc(ordersDate);
+      start.set({ hour: 0, minute: 0, second: 0, millisecond: 0 });
 
+      var end = moment.utc(ordersDate);
+      end.set({ hour: 23, minute: 59, second: 59, millisecond: 999 });
+      filterBy["$or"] = [
+        { orderDate: { $gte: start.format(), $lt: end.format() } },
+        { created: { $gte: start.format(), $lt: end.format() } },
+      ];
+    }
     // Get our paginated data
-    const orders = await paginateData(
-      true,
-      req,
-      pageNum,
-      "orders",
-      { status: { $in: statusList } },
-      { created: -1 }
-    );
+    const orders = await paginateData(true, req, pageNum, "orders", filterBy, {
+      created: -1,
+    });
     // orders?.data?.forEach(async (order)=>{
     for (const order of orders?.data) {
       const customer = await db.customers.findOne({
@@ -399,7 +412,9 @@ router.post("/api/order/update", auth.required, async (req, res) => {
     );
     const order = await db.orders.findOne({ _id: getId(req.body.orderId) });
     const customerId = order.customerId;
-    websockets.fireWebscoketEvent("order status updated", updateobj,[customerId]);
+    websockets.fireWebscoketEvent("order status updated", updateobj, [
+      customerId,
+    ]);
 
     return res.status(200).json({ message: "Order successfully updated" });
   } catch (ex) {
