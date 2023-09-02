@@ -61,6 +61,9 @@ router.post(
         { created: { $gte: start.format(), $lt: end.format() } },
       ];
     }
+    if (req.body.isNotPrinted) {
+      filterBy.isPrinted = false;
+    }
     // Get our paginated data
     const orders = await paginateData(true, req, pageNum, "orders", filterBy, {
       created: -1,
@@ -94,6 +97,18 @@ router.post(
   }
 );
 
+router.get("/api/order/admin/not-printed", async (req, res, next) => {
+  const db = req.app.db;
+  let finalOrders = [];
+
+  finalOrders = await db.orders
+    .find({
+      isPrinted: false,
+    })
+    .toArray();
+
+  res.status(200).json(finalOrders);
+});
 router.post("/api/order/byDate", async (req, res, next) => {
   const db = req.app.db;
   let finalOrders = [];
@@ -429,7 +444,7 @@ router.post("/api/order/printed", auth.required, async (req, res) => {
     console.log("PRINTED", req.body.orderId);
     await db.orders.updateOne(
       {
-        _id: getId(req.body.orderId),
+        _id: getId(req.body?.orderId?.$oid ? req.body.orderId.$oid : req.body.orderId),
       },
       { $set: { isPrinted: true } },
       { multi: false }
