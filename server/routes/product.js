@@ -204,15 +204,16 @@ router.post(
     };
     
     if(req.body.categoryId== "5" && req.body.subCategoryId != "1" && req.body.cakeLevels){
-      const levels = {};
-      for (let i = 0; i <=  Number(req.body.cakeLevels); i++) {
+      let levels = {};
+      for (let i = 0; i <  Number(req.body.cakeLevels); i++) {
         levels[i + 1] = null;
       }
       doc.extras = {
         ...doc.extras,
         taste: {
           type: "dropDown",
-          value: levels,
+          value: {},
+          options: levels
         },
       };
     }

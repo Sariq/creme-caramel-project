@@ -58,7 +58,7 @@ router.post(
       end.set({ hour: 23, minute: 59, second: 59, millisecond: 999 });
       filterBy["$or"] = [
         { orderDate: { $gte: start.format(), $lt: end.format() } },
-        { created: { $gte: start.format(), $lt: end.format() } },
+        { datetime: { $gte: start.format(), $lt: end.format() } },
       ];
     }
     if (req.body.isNotPrinted) {
@@ -66,7 +66,7 @@ router.post(
     }
     // Get our paginated data
     const orders = await paginateData(true, req, pageNum, "orders", filterBy, {
-      created: -1,
+      datetime: -1,
     });
     // orders?.data?.forEach(async (order)=>{
     for (const order of orders?.data) {
