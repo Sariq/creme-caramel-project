@@ -35,8 +35,8 @@ router.post(
     let finalOrders = [];
 
     let pageNum = 1;
-    if (req.params.page) {
-      pageNum = req.params.page;
+    if ( req.body.pageNumber) {
+      pageNum =  req.body.pageNumber;
     }
 
     let statusList = ["1", "2", "3", "4", "5"];
@@ -56,17 +56,21 @@ router.post(
 
       var end = moment.utc(ordersDate);
       end.set({ hour: 23, minute: 59, second: 59, millisecond: 999 });
-      filterBy["$or"] = [
-        { orderDate: { $gte: start.format(), $lt: end.format() } },
-        { datetime: { $gte: start.format(), $lt: end.format() } },
-      ];
+      // filterBy["$or"] = [
+      //   { orderDate: { $gte: start.format(), $lt: end.format() } },
+      //   { datetime: { $gte: start.format(), $lt: end.format() } },
+      // ];
+      filterBy = {
+        ...filterBy,
+        orderDate: { $gte: start.format(), $lt: end.format() } ,
+      };
     }
     if (req.body.isNotPrinted) {
       filterBy.isPrinted = false;
     }
     // Get our paginated data
     const orders = await paginateData(true, req, pageNum, "orders", filterBy, {
-      datetime: -1,
+      orderDate: -1,
     });
     // orders?.data?.forEach(async (order)=>{
     for (const order of orders?.data) {
@@ -74,17 +78,17 @@ router.post(
         _id: getId(order.customerId),
       });
       if (customer) {
-        const dataUri = await textToImage.generate(customer.fullName, {
-          maxWidth: 200,
-          textAlign: "center",
-        });
+        // const dataUri = await textToImage.generate(customer.fullName, {
+        //   maxWidth: 200,
+        //   textAlign: "center",
+        // });
 
         finalOrders.push({
           ...order,
           customerDetails: {
             name: customer.fullName,
             phone: customer.phone,
-            recipetName: dataUri,
+            // recipetName: dataUri,
           },
         });
       }
@@ -317,8 +321,10 @@ router.post(
         generatedOrderId,
         orderDoc.app_language
       );
-      smsService.sendSMS(customer.phone, smsContent, req);
-      smsService.sendSMS("0536660444", smsContent, req);
+      //smsService.sendSMS(customer.phone, smsContent, req);
+      // smsService.sendSMS("0536660444", smsContent, req);
+      // smsService.sendSMS("0542454362", smsContent, req);
+
       console.log("fire websocket order");
       const dataUri = await textToImage.generate(customer.fullName, {
         maxWidth: 200,
