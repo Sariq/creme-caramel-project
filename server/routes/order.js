@@ -422,7 +422,7 @@ router.get("/admin/order/delete/:id", async (req, res) => {
 router.post("/api/order/update", auth.required, async (req, res) => {
   const db = req.app.db;
   try {
-    const updateobj = { status: req.body.status };
+    const updateobj = req.body.updateData;
     console.log("XXX", updateobj);
 
     await db.orders.updateOne(
