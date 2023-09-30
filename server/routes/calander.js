@@ -28,6 +28,21 @@ router.post("/api/admin/calander/disable/hour/insert", async (req, res) => {
 
 });
 
+router.post("/api/admin/calander/disable/hour/insert/multi", async (req, res) => {
+    const db = req.app.db;
+    try {
+        await db.calander.insertMany(req.body);
+        websockets.fireWebscoketEvent();
+
+          res.status(200).json({});
+      } catch (ex) {
+        console.error(colors.red("Failed to insert calander disable hour: ", ex));
+        res.status(400).json({
+          message: "Customer creation failed.",
+        });
+      }
+});
+
 router.post("/api/admin/calander/enable/hour", async (req, res) => {
     const db = req.app.db;
     const calanderObj = {
@@ -39,6 +54,20 @@ router.post("/api/admin/calander/enable/hour", async (req, res) => {
         const updateobj = { isDisabled: false };
         await db.calander.deleteOne({
             date: calanderObj.date, hour: calanderObj.hour });
+            websockets.fireWebscoketEvent();
+
+        return res.status(200).json({ message: 'Disabled Hour enabled successfully updated' });
+    }catch(ex){
+        console.info('Error updating calander enable hour', ex);
+    }
+
+});
+
+router.post("/api/admin/calander/enable/hour/multi", async (req, res) => {
+  const db = req.app.db;
+    try{
+        await db.calander.deleteMany({
+            date: req.body.data});
             websockets.fireWebscoketEvent();
 
         return res.status(200).json({ message: 'Disabled Hour enabled successfully updated' });

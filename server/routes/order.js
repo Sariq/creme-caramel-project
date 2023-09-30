@@ -322,8 +322,8 @@ router.post(
         orderDoc.app_language
       );
       //smsService.sendSMS(customer.phone, smsContent, req);
-      // smsService.sendSMS("0536660444", smsContent, req);
-      // smsService.sendSMS("0542454362", smsContent, req);
+      smsService.sendSMS("0536660444", smsContent, req);
+      smsService.sendSMS("0542454362", smsContent, req);
 
       console.log("fire websocket order");
       const dataUri = await textToImage.generate(customer.fullName, {
