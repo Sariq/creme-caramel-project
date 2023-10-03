@@ -49,7 +49,8 @@ router.post("/api/customer/validateAuthCode", async (req, res) => {
     (customerObj.phone === "0542454362" && customerObj.authCode === "1234") || 
     (customerObj.phone === "0528602121" && customerObj.authCode === "1234") || 
     (customerObj.phone === "1234567891" && customerObj.authCode === "1234") || 
-    (customerObj.phone === "1234567892" && customerObj.authCode === "1234")
+    (customerObj.phone === "1234567892" && customerObj.authCode === "1234") ||
+    (customerObj.phone === "1234567893" && customerObj.authCode === "1234")
 
   ) {
     const customerNewUpdate = {
@@ -115,7 +116,7 @@ router.post("/api/customer/create", async (req, res) => {
       { multi: false, returnOriginal: false }
     );
     res.status(200).json({ phone: req.body.phone });
-    if(customer.phone !== "0542454362" && customer.phone !== "0528602121" && customer.phone !== "1234567891" && customer.phone !== "1234567892"){
+    if(customer.phone !== "0542454362" && customer.phone !== "0528602121" && customer.phone !== "1234567891" && customer.phone !== "1234567892" && customer.phone !== "1234567893"){
       const smsContent = smsService.getVerifyCodeContent(random4DigitsCode);
       smsService.sendSMS(customer.phone, smsContent, req);
     }
@@ -127,7 +128,7 @@ router.post("/api/customer/create", async (req, res) => {
   // email is ok to be used.
   try {
     const newCustomer = await db.customers.insertOne(customerObj);
-    if(customer.phone !== "0542454362" && customer.phone !== "0528602121" && customer.phone !== "1234567891" && customer.phone !== "1234567892"){
+    if(customer.phone !== "0542454362" && customer.phone !== "0528602121" && customer.phone !== "1234567891" && customer.phone !== "1234567892" && customer.phone !== "1234567893"){
       const smsContent = smsService.getVerifyCodeContent(random4DigitsCode);
       smsService.sendSMS(customer.phone, smsContent, req);
     }
