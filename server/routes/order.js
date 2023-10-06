@@ -51,10 +51,10 @@ router.post(
       status: { $in: statusList },
     };
     if (ordersDate) {
-      var start = moment.utc(ordersDate);
+      var start = moment(ordersDate);
       start.set({ hour: 0, minute: 0, second: 0, millisecond: 0 });
 
-      var end = moment.utc(ordersDate);
+      var end = moment(ordersDate);
       end.set({ hour: 23, minute: 59, second: 59, millisecond: 999 });
       // filterBy["$or"] = [
       //   { orderDate: { $gte: start.format(), $lt: end.format() } },
