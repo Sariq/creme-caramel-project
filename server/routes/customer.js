@@ -173,14 +173,8 @@ router.post("/api/customer/admin-create", async (req, res) => {
   // check for existing customer
   const customer = await db.customers.findOne({ phone: req.body.phone });
   if (customer) {
-    const updatedCustomer = await db.customers.findOneAndUpdate(
-      { phone: req.body.phone },
-      {
-        $set: { ...customer, authCode: random4DigitsCode, token: null },
-      },
-      { multi: false, returnOriginal: false }
-    );
-    res.status(200).json({ phone: req.body.phone });
+    res.status(200).json({ phone: customer.phone, fullName: customer.fullName, isAdmin: customer.isAdmin, customerId: customer._id, isExist: true });
+
     // if(customer.phone !== "0542454362" && customer.phone !== "0528602121"){
     //   const smsContent = smsService.getVerifyCodeContent(random4DigitsCode);
     //   smsService.sendSMS(customer.phone, smsContent, req);

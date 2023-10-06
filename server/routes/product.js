@@ -932,4 +932,23 @@ router.post("/api/images", async (req, res, next) => {
   }
 });
 
+router.post(
+  "/api/admin/product/update/isInStore",
+  async (req, res) => {
+    const db = req.app.db;
+
+    try {
+      await db.products.updateOne(
+        { _id: getId(req.body.productId) },
+        { $set: { isInStore: req.body.isInStore } },
+        { multi: false }
+      );
+      res.status(200).json({ message: "isInStore state updated" });
+    } catch (ex) {
+      console.error(colors.red(`Failed to update the isInStore state: ${ex}`));
+      res.status(400).json({ message: "isInStore state not updated" });
+    }
+  }
+);
+
 module.exports = router;
