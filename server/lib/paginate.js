@@ -13,7 +13,7 @@ const {
 const paginateData = (isPagenate, req, page, collection, query, sort) => {
     const db = req.app.db;
     const config = getConfig();
-    let numberItems = isPagenate ? 20: 100;
+    let numberItems = isPagenate ? 3: 100;
 
     let skip = 0;
     if(page > 1){
@@ -29,7 +29,7 @@ const paginateData = (isPagenate, req, page, collection, query, sort) => {
 
     // Run our queries
     return Promise.all([
-        db[collection].find(query).skip(skip).limit(parseInt(numberItems)).sort(sort).toArray(),
+        db[collection].find(query).sort(sort).skip(skip).limit(parseInt(numberItems)).toArray(),
         db[collection].countDocuments(query)
     ])
     .then((result) => {

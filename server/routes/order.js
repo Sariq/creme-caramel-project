@@ -70,7 +70,7 @@ router.post(
     }
     // Get our paginated data
     const orders = await paginateData(true, req, pageNum, "orders", filterBy, {
-      orderDate: -1,
+      orderDate: 1,
     });
     // orders?.data?.forEach(async (order)=>{
     for (const order of orders?.data) {

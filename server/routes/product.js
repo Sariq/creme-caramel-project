@@ -460,6 +460,21 @@ router.post(
   }
 );
 
+router.post(
+  "/api/admin/product/update/activeTastes",
+  upload.array("img"),
+  async (req, res) => {
+    const db = req.app.db;
+
+    await db.products.updateOne(
+      { _id: getId(req.body.id) },
+      { $set: { activeTastes: (req.body.activeTastes) } },
+      { multi: false }
+    );
+    res.status(200).json({ message: "Product successfully updated" });
+
+  })
+
 // delete a product
 router.post("/api/admin/product/delete", async (req, res) => {
   const db = req.app.db;
