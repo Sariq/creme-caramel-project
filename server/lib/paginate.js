@@ -13,7 +13,7 @@ const {
 const paginateData = (isPagenate, req, page, collection, query, sort) => {
     const db = req.app.db;
     const config = getConfig();
-    let numberItems = isPagenate ? 20: 100;
+    let numberItems = isPagenate ? 20: 1000;
 
     let skip = 0;
     if(page > 1){

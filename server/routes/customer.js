@@ -46,12 +46,12 @@ router.post("/api/customer/validateAuthCode", async (req, res) => {
 
   if (
     customer.authCode == customerObj.authCode ||
-    (customerObj.phone === "0542454362" && customerObj.authCode === "1234") || 
-    (customerObj.phone === "0528602121" && customerObj.authCode === "1234") || 
-    (customerObj.phone === "1234567891" && customerObj.authCode === "1234") || 
+    (customerObj.phone === "0542454362" && customerObj.authCode === "1234") ||
+    (customerObj.phone === "0528602121" && customerObj.authCode === "1234") ||
+    (customerObj.phone === "1234567891" && customerObj.authCode === "1234") ||
     (customerObj.phone === "1234567892" && customerObj.authCode === "1234") ||
-    (customerObj.phone === "1234567893" && customerObj.authCode === "1234")
-
+    (customerObj.phone === "1234567893" && customerObj.authCode === "1234") ||
+    (customerObj.phone === "1234567899" && customerObj.authCode === "1234")
   ) {
     const customerNewUpdate = {
       ...customer,
@@ -78,7 +78,9 @@ router.post("/api/customer/validateAuthCode", async (req, res) => {
       });
     } catch (ex) {
       console.error(colors.red(`Failed updating customer: ${ex}`));
-      res.status(400).json({ message: "Failed to update customer", error_code: -1 });
+      res
+        .status(400)
+        .json({ message: "Failed to update customer", error_code: -1 });
     }
   } else {
     res.status(200).json({
@@ -116,7 +118,14 @@ router.post("/api/customer/create", async (req, res) => {
       { multi: false, returnOriginal: false }
     );
     res.status(200).json({ phone: req.body.phone });
-    if(customer.phone !== "0542454362" && customer.phone !== "0528602121" && customer.phone !== "1234567891" && customer.phone !== "1234567892" && customer.phone !== "1234567893"){
+    if (
+      customer.phone !== "0542454362" &&
+      customer.phone !== "0528602121" &&
+      customer.phone !== "1234567891" &&
+      customer.phone !== "1234567892" &&
+      customer.phone !== "1234567893" &&
+      customer.phone !== "1234567899"
+    ) {
       const smsContent = smsService.getVerifyCodeContent(random4DigitsCode);
       smsService.sendSMS(customer.phone, smsContent, req);
     }
@@ -128,7 +137,14 @@ router.post("/api/customer/create", async (req, res) => {
   // email is ok to be used.
   try {
     const newCustomer = await db.customers.insertOne(customerObj);
-    if(customer.phone !== "0542454362" && customer.phone !== "0528602121" && customer.phone !== "1234567891" && customer.phone !== "1234567892" && customer.phone !== "1234567893"){
+    if (
+      customer.phone !== "0542454362" &&
+      customer.phone !== "0528602121" &&
+      customer.phone !== "1234567891" &&
+      customer.phone !== "1234567892" &&
+      customer.phone !== "1234567893" &&
+      customer.phone !== "1234567899"
+    ) {
       const smsContent = smsService.getVerifyCodeContent(random4DigitsCode);
       smsService.sendSMS(customer.phone, smsContent, req);
     }
@@ -173,7 +189,15 @@ router.post("/api/customer/admin-create", async (req, res) => {
   // check for existing customer
   const customer = await db.customers.findOne({ phone: req.body.phone });
   if (customer) {
-    res.status(200).json({ phone: customer.phone, fullName: customer.fullName, isAdmin: customer.isAdmin, customerId: customer._id, isExist: true });
+    res
+      .status(200)
+      .json({
+        phone: customer.phone,
+        fullName: customer.fullName,
+        isAdmin: customer.isAdmin,
+        customerId: customer._id,
+        isExist: true,
+      });
 
     // if(customer.phone !== "0542454362" && customer.phone !== "0528602121"){
     //   const smsContent = smsService.getVerifyCodeContent(random4DigitsCode);
@@ -194,7 +218,14 @@ router.post("/api/customer/admin-create", async (req, res) => {
       const customer = await db.customers.findOne({
         _id: getId(customerInsertedId),
       });
-      res.status(200).json({ phone: customer.phone, fullName: customer.fullName, isAdmin: customer.isAdmin, customerId: customer._id });
+      res
+        .status(200)
+        .json({
+          phone: customer.phone,
+          fullName: customer.fullName,
+          isAdmin: customer.isAdmin,
+          customerId: customer._id,
+        });
     });
   } catch (ex) {
     console.error(colors.red("Failed to insert customer: ", ex));
@@ -277,14 +308,14 @@ router.post("/api/customer/orders", auth.required, async (req, res) => {
       });
       return;
     }
-    if(customer.orders){
+    if (customer.orders) {
       var ids = customer.orders;
-    
+
       var oids = [];
       ids.forEach(function (item) {
         oids.push(getId(item));
       });
-  
+
       const orders = await paginateData(
         true,
         req,
@@ -303,11 +334,9 @@ router.post("/api/customer/orders", auth.required, async (req, res) => {
       //   .sort({ orderDate: -1 })
       //   .toArray();
       //   res.status(200).json(orders);
-    }else{
+    } else {
       res.status(200).json([]);
     }
-
-
   } catch (ex) {
     console.error(colors.red(`Failed get customer: ${ex}`));
     res.status(400).json({ message: "Failed to get customer" });
@@ -340,7 +369,13 @@ router.get("/api/customer/details", auth.required, async (req, res) => {
     }
     res.status(200).json({
       message: "Customer updated",
-      data: { phone: customer.phone, fullName: customer.fullName, isAdmin: customer.isAdmin, customerId, roles: customer.roles },
+      data: {
+        phone: customer.phone,
+        fullName: customer.fullName,
+        isAdmin: customer.isAdmin,
+        customerId,
+        roles: customer.roles,
+      },
     });
   } catch (ex) {
     console.error(colors.red(`Failed get customer: ${ex}`));
@@ -864,18 +899,20 @@ router.post("/customer/check", (req, res) => {
 });
 
 // logout the customer
-router.post("/api/customer/logout",auth.required, async (req, res) => {
+router.post("/api/customer/logout", auth.required, async (req, res) => {
   const db = req.app.db;
-  const { auth : { id } } = req
+  const {
+    auth: { id },
+  } = req;
   await db.customers.findOneAndUpdate(
     { _id: getId(id) },
     {
-      $set: {token: null},
+      $set: { token: null },
     },
     { multi: false, returnOriginal: false }
   );
 
-  res.status(200).json({data: 'logout success'});
+  res.status(200).json({ data: "logout success" });
 });
 
 // logout the customer
@@ -885,20 +922,19 @@ router.get("/customer/logout", (req, res) => {
   res.redirect("/customer/login");
 });
 
-
 router.post("/api/customer/search-customer", async (req, res) => {
   const db = req.app.db;
   const searchQuery = req.body.searchQuery;
   const query = {
     $or: [
-      { phone: { $regex: searchQuery, $options: 'i' } }, // Case-insensitive regex search
-      { fullName: { $regex: searchQuery, $options: 'i' } }
-    ]
+      { phone: { $regex: searchQuery, $options: "i" } }, // Case-insensitive regex search
+      { fullName: { $regex: searchQuery, $options: "i" } },
+    ],
   };
   const customer = await db.customers.find(query).toArray();
 
   try {
-      res.status(200).json(customer);
+    res.status(200).json(customer);
   } catch (ex) {
     console.error(colors.red("Failed to search customer: ", ex));
     res.status(400).json({
