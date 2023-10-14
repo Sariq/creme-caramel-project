@@ -359,6 +359,122 @@ router.post(
   }
 );
 
+router.post(
+  "/api/order/update/all",
+  upload.array("img"),
+  auth.required,
+  async (req, res, next) => {
+    const db = req.app.db;
+    const config = req.app.config;
+    const parsedBodey = JSON.parse(req.body.body);
+    const customerId = parsedBodey.customerId || req.auth.id;
+    const db_orderId = parsedBodey.db_orderId;
+    const orderId = parsedBodey.orderId;
+
+    // // Check if cart is empty
+    // if(!req.session.cart){
+    //     res.status(400).json({
+    //         message: 'The cart is empty. You will need to add items to the cart first.'
+    //     });
+    // }
+    let imagesList = [];
+    if (req.files && req.files.length > 0) {
+      imagesList = await imagesService.uploadImage(req.files, req, "orders");
+    }
+    let imageIndex = 0;
+    let updatedItemsWithImages = [];
+    if (imagesList?.length > 0) {
+      updatedItemsWithImages = parsedBodey.order.items.map((item) => {
+        if (item.clienImage) {
+          imageIndex++;
+          return {
+            ...item,
+            clienImage: imagesList[imageIndex - 1],
+          };
+        }
+        return {
+          ...item,
+          clienImage: null,
+        };
+      });
+    }
+
+    const orderDoc = {
+      ...parsedBodey,
+      order: {
+        ...parsedBodey.order,
+        items:
+          updatedItemsWithImages?.length > 0
+            ? updatedItemsWithImages
+            : parsedBodey.order.items,
+      },
+      created: new Date(),
+      customerId,
+      orderId: orderId,
+      status: "1",
+      isPrinted: false,
+    };
+
+    // insert order into DB
+    try {
+ 
+      await db.orders.updateOne(
+        {
+          _id: getId(db_orderId),
+        },
+        { $set: orderDoc },
+        { multi: false }
+      );
+
+      const customer = await db.customers.findOne({
+        _id: getId(customerId),
+      });
+      if (!customer) {
+        res.status(400).json({
+          message: "Customer not found",
+        });
+        return;
+      }
+
+      // const smsContent = smsService.getOrderRecivedContent(
+      //   customer.fullName,
+      //   orderDoc.total,
+      //   orderDoc.order.receipt_method,
+      //   generatedOrderId,
+      //   orderDoc.app_language
+      // );
+      //smsService.sendSMS(customer.phone, smsContent, req);
+      // smsService.sendSMS("0536660444", smsContent, req);
+      // smsService.sendSMS("0542454362", smsContent, req);
+
+ 
+      const finalOrderDoc = {
+        ...orderDoc,
+        customerDetails: {
+          name: customer.fullName,
+          phone: customer.phone,
+        },
+      };
+      websockets.fireWebscoketEvent("new order", finalOrderDoc);
+
+      // https://www.waze.com/ul?ll=32.23930691837541,34.95049682449079&navigate=yes&zoom=17
+      // add to lunr index
+      indexOrders(req.app).then(() => {
+        // send the email with the response
+        // TODO: Should fix this to properly handle result
+        //sendEmail(req.session.paymentEmailAddr, `Your order with ${config.cartTitle}`, getEmailTemplate(paymentResults));
+        // redirect to outcome
+        res.status(200).json({
+          message: "Order created successfully",
+        });
+      });
+    } catch (ex) {
+      console.log(ex);
+      res.status(400).json({ err: "Your order declined. Please try again" });
+    }
+  }
+);
+
 // Admin section
 router.get("/admin/orders/filter/:search", restrict, async (req, res, next) => {
   const db = req.app.db;
