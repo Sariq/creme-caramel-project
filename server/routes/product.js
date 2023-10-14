@@ -41,7 +41,7 @@ const uploadFile = async (files, req, folderName) => {
   let locationslist = [];
   let counter = 0;
 
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     const s3Client = new S3Client({
       endpoint: "https://fra1.digitaloceanspaces.com", // Find your endpoint in the control panel, under Settings. Prepend "https://".
       //forcePathStyle: false, // Configures to use subdomain/virtual calling format.
@@ -54,7 +54,8 @@ const uploadFile = async (files, req, folderName) => {
     files = files.filter((file) => file.originalname !== "existingImage");
     console.log("X3");
     if (files.length > 0) {
-      files.forEach(async (file, i) => {
+      // files.forEach(async (file, i) => {
+      for (const file of files) {
         const fileName = `${new Date().getTime()}` + file.originalname;
         const folder = folderName || "products";
         const params = {
@@ -79,7 +80,7 @@ const uploadFile = async (files, req, folderName) => {
         } catch (err) {
           console.log("Error", err);
         }
-      });
+      }
     } else {
       resolve(locationslist);
     }
@@ -112,6 +113,101 @@ const deleteImages = async (images, req) => {
   });
 };
 
+const addProductByImage = (image) => {
+  let req = {};
+  req.body = {
+    nameAR: "كعكة ",
+    nameHE: "עוגות ",
+    categoryId: "5",
+    subCategoryId: "3",
+    cakeLevels: "2",
+    descriptionAR: "شرح",
+    descriptionHE: "הסבר",
+    mediumPrice: "10",
+    mediumCount: "20",
+    isInStore: "true",
+    isUploadImage: "false",
+  };
+  const orderDoc = { ...req.body };
+  let doc = {
+    nameAR: req.body.nameAR,
+    nameHE: req.body.nameHE,
+    categoryId: req.body.categoryId,
+    descriptionAR: cleanHtml(req.body.descriptionAR),
+    descriptionHE: cleanHtml(req.body.descriptionHE),
+    notInStoreDescriptionAR: cleanHtml(req.body.notInStoreDescriptionAR),
+    notInStoreDescriptionHE: cleanHtml(req.body.notInStoreDescriptionHE),
+    // mediumPrice: Number(req.body.mediumPrice),
+    // largePrice: Number(req.body.largePrice),
+    // mediumCount: Number(req.body.mediumCount),
+    // largeCount: Number(req.body.largeCount),
+    isInStore: req.body.isInStore === "false" ? false : true,
+    isUploadImage: req.body.isUploadImage === "false" ? false : true,
+    createdAt: new Date(),
+  };
+
+  if (req.body.subCategoryId) {
+    doc.subCategoryId = req.body.subCategoryId;
+  }
+  doc.extras = {
+    ...doc.extras,
+    counter: {
+      type: "COUNTER",
+      value: 1,
+    },
+  };
+
+  doc.extras = {
+    ...doc.extras,
+    size: {
+      options: {
+        medium: {
+          price: Number(req.body.mediumPrice),
+          count: Number(req.body.mediumCount),
+        },
+        large: {
+          price: Number(req.body.largePrice),
+          count: Number(req.body.largeCount),
+        },
+      },
+      type: "oneChoice",
+      value: "medium",
+    },
+  };
+
+  if (
+    req.body.categoryId == "5" &&
+    req.body.subCategoryId != "1" &&
+    req.body.cakeLevels
+  ) {
+    let levels = {};
+    for (let i = 0; i < Number(req.body.cakeLevels); i++) {
+      levels[i + 1] = null;
+    }
+    doc.extras = {
+      ...doc.extras,
+      taste: {
+        type: "dropDown",
+        value: {},
+        options: levels,
+      },
+    };
+  }
+
+  if (doc.isUploadImage) {
+    doc.extras = {
+      ...doc.extras,
+      image: {
+        type: "uploadImage",
+        value: null,
+      },
+    };
+  }
+  doc.img = [image];
+
+  return doc;
+};
+
 // insert new product form action
 router.post(
   "/api/admin/images/upload",
@@ -126,14 +222,17 @@ router.post(
     }
 
     if (imagesList?.length > 0) {
-      imagesList.forEach((image) => {
+      for (const image of imagesList) {
+        // const doc = addProductByImage(image)
+        // const newDoc = await db.products.insertOne(doc);
+
         const doc = {
           data: image,
           type: "birthday",
-          subType: body.subType
+          subType: body.subType,
         };
-        db.images.insertOne(doc);
-      });
+        await db.images.insertOne(doc);
+      }
 
       res.status(200).json({
         message: "New product successfully created",
@@ -174,7 +273,7 @@ router.post(
       createdAt: new Date(),
     };
 
-    if(req.body.subCategoryId){
+    if (req.body.subCategoryId) {
       doc.subCategoryId = req.body.subCategoryId;
     }
     doc.extras = {
@@ -189,23 +288,27 @@ router.post(
       ...doc.extras,
       size: {
         options: {
-          medium:{
+          medium: {
             price: Number(req.body.mediumPrice),
-            count: Number(req.body.mediumCount)
+            count: Number(req.body.mediumCount),
           },
           large: {
             price: Number(req.body.largePrice),
-            count: Number(req.body.largeCount)
-          }
+            count: Number(req.body.largeCount),
+          },
         },
         type: "oneChoice",
         value: "medium",
       },
     };
-    
-    if(req.body.categoryId== "5" && req.body.subCategoryId != "1" && req.body.cakeLevels){
+
+    if (
+      req.body.categoryId == "5" &&
+      req.body.subCategoryId != "1" &&
+      req.body.cakeLevels
+    ) {
       let levels = {};
-      for (let i = 0; i <  Number(req.body.cakeLevels); i++) {
+      for (let i = 0; i < Number(req.body.cakeLevels); i++) {
         levels[i + 1] = null;
       }
       doc.extras = {
@@ -213,7 +316,7 @@ router.post(
         taste: {
           type: "dropDown",
           value: {},
-          options: levels
+          options: levels,
         },
       };
     }
@@ -307,7 +410,7 @@ router.post(
       updatedAt: new Date(),
     };
 
-    if(req.body.activeTastes){
+    if (req.body.activeTastes) {
       const parsedActiveTastes = req.body.activeTastes.split(",");
       productDoc.activeTastes = parsedActiveTastes;
     }
@@ -330,14 +433,14 @@ router.post(
       ...productDoc.extras,
       size: {
         options: {
-          medium:{
+          medium: {
             price: Number(req.body.mediumPrice),
-            count: Number(req.body.mediumCount)
+            count: Number(req.body.mediumCount),
           },
           large: {
             price: Number(req.body.largePrice),
-            count: Number(req.body.largeCount)
-          }
+            count: Number(req.body.largeCount),
+          },
         },
         type: "oneChoice",
         value: req.body.mediumCount > 0 ? "medium" : "large",
@@ -354,7 +457,11 @@ router.post(
       };
     }
 
-    if(req.body.categoryId== "5" && req.body.subCategoryId != "1" && req.body.cakeLevels){
+    if (
+      req.body.categoryId == "5" &&
+      req.body.subCategoryId != "1" &&
+      req.body.cakeLevels
+    ) {
       const levels = {};
       for (let i = 0; i < Number(req.body.cakeLevels); i++) {
         levels[i + 1] = null;
@@ -364,18 +471,18 @@ router.post(
         taste: {
           type: "dropDown",
           value: {},
-          options: levels
+          options: levels,
         },
       };
     }
 
-    if(req.body.productId == "647e63a81cef6b000d34be4c"){
+    if (req.body.productId == "647e63a81cef6b000d34be4c") {
       productDoc.extras = {
         ...productDoc.extras,
         taste: {
           type: "dropDown",
           value: {},
-          options: {"1": null}
+          options: { 1: null },
         },
       };
     }
@@ -468,12 +575,12 @@ router.post(
 
     await db.products.updateOne(
       { _id: getId(req.body.id) },
-      { $set: { activeTastes: (req.body.activeTastes) } },
+      { $set: { activeTastes: req.body.activeTastes } },
       { multi: false }
     );
     res.status(200).json({ message: "Product successfully updated" });
-
-  })
+  }
+);
 
 // delete a product
 router.post("/api/admin/product/delete", async (req, res) => {
@@ -947,23 +1054,20 @@ router.post("/api/images", async (req, res, next) => {
   }
 });
 
-router.post(
-  "/api/admin/product/update/isInStore",
-  async (req, res) => {
-    const db = req.app.db;
+router.post("/api/admin/product/update/isInStore", async (req, res) => {
+  const db = req.app.db;
 
-    try {
-      await db.products.updateOne(
-        { _id: getId(req.body.productId) },
-        { $set: { isInStore: req.body.isInStore } },
-        { multi: false }
-      );
-      res.status(200).json({ message: "isInStore state updated" });
-    } catch (ex) {
-      console.error(colors.red(`Failed to update the isInStore state: ${ex}`));
-      res.status(400).json({ message: "isInStore state not updated" });
-    }
+  try {
+    await db.products.updateOne(
+      { _id: getId(req.body.productId) },
+      { $set: { isInStore: req.body.isInStore } },
+      { multi: false }
+    );
+    res.status(200).json({ message: "isInStore state updated" });
+  } catch (ex) {
+    console.error(colors.red(`Failed to update the isInStore state: ${ex}`));
+    res.status(400).json({ message: "isInStore state not updated" });
   }
-);
+});
 
 module.exports = router;
