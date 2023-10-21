@@ -1,5 +1,5 @@
 const axios = require('axios');
-
+const moment = require("moment");
 const apiPath = 'https://webapi.mymarketing.co.il/api/smscampaign/OperationalMessage';
 
 sendSMS = function ( phoneNumber, smsContent, req) {
@@ -40,10 +40,37 @@ sendSMS = function ( phoneNumber, smsContent, req) {
 getOrderRecivedContent = function (customerName, totalAmount, shippingMethod, orderId, lang) {
     const orderIdSplit = orderId.split("-");
     const idPart2 = orderIdSplit[2];
-    return `היי ${customerName} - ההזמנה התקבלה בהצלחה \n ` 
-    + `שיטת משלוח ${shippingMethod} \n `
+    return `היי ${customerName} \u{1F60A} \n ` 
+    + `ההזמנה התקבלה בהצלחה \n `
+    + ` - שיטת איסוף ${shippingMethod == "TAKEAWAY" ? "איסוף עצמי" : "משלוח"} \n `
     + `מספר הזמנה ${idPart2} \n`
     + `סה״כ ${totalAmount} `
+}
+
+getOrderTakeawayReadyContent = function (customerName, orderId, lang) {
+  const orderIdSplit = orderId.split("-");
+  const idPart2 = orderIdSplit[2];
+  return `היי ${customerName} \u{1F60A} \n ` 
+  + `ההזמנה מוכנה לאיסוף \n`
+  + `מספר הזמנה ${idPart2} \n`
+}
+
+getOrderDeliveryReadyContent = function (customerName, orderId, lang) {
+  const orderIdSplit = orderId.split("-");
+  const idPart2 = orderIdSplit[2];
+  return `היי ${customerName} \u{1F60A} \n ` 
+  + `ההזמנה מוכנה, השליח בדרך אליך \n`
+  + `מספר הזמנה ${idPart2} \n`
+}
+
+getOrderDeliveryCompanyContent = function (customerName, orderId, lang,orderDate) {
+  const orderIdSplit = orderId.split("-");
+  const idPart2 = orderIdSplit[2];
+  return `היי \n ` 
+  + `ההזמנה מוכנה לאיסוף \n`
+  + `שעת מסיר: ${moment(orderDate).format('HH:mm')}\n`
+  + `מספר הזמנה ${idPart2} \n`
+  + `שם הלקוח ${customerName} \n`
 }
 
 
@@ -51,9 +78,17 @@ getVerifyCodeContent = function (verifyCode) {
     return `קוד האימות שלך הוא: ${verifyCode}`;
 }
 
+getOrderInvoiceContent = function (invoiceUrl) {
+  return `מצורף לינק לחשבונית לצפייה: ${invoiceUrl}`;
+}
+
 const smsService = {
     sendSMS: sendSMS,
     getOrderRecivedContent: getOrderRecivedContent,
+    getOrderInvoiceContent: getOrderInvoiceContent,
     getVerifyCodeContent: getVerifyCodeContent,
+    getOrderTakeawayReadyContent: getOrderTakeawayReadyContent,
+    getOrderDeliveryReadyContent: getOrderDeliveryReadyContent,
+    getOrderDeliveryCompanyContent: getOrderDeliveryCompanyContent,
 };
 module.exports = smsService;
