@@ -9,7 +9,7 @@ const imagesService = require("../utils/images-service");
 var multer = require("multer");
 const upload = multer({ storage: multer.memoryStorage() });
 const turl = require("turl");
-var QRCode = require('qrcode')
+var QRCode = require("qrcode");
 
 const axios = require("axios");
 
@@ -29,14 +29,16 @@ const { indexOrders } = require("../lib/indexing");
 const moment = require("moment");
 const router = express.Router();
 
-const generateQR = async (latitude,longitude) => {
+const generateQR = async (latitude, longitude) => {
   try {
-    const qrCodeURI = await QRCode.toDataURL(`https://www.waze.com/ul?ll=${latitude},${longitude}&navigate=yes&zoom=17`)
+    const qrCodeURI = await QRCode.toDataURL(
+      `https://www.waze.com/ul?ll=${latitude},${longitude}&navigate=yes&zoom=17`
+    );
     return qrCodeURI;
   } catch (err) {
-    console.error(err)
+    console.error(err);
   }
-}
+};
 
 // Show orders
 router.post(
@@ -124,6 +126,21 @@ router.get("/api/order/admin/not-printed", async (req, res, next) => {
 
   res.status(200).json(finalOrders);
 });
+
+router.get("/api/order/admin/not-viewd", async (req, res, next) => {
+  const db = req.app.db;
+  let finalOrders = [];
+
+  finalOrders = await db.orders
+    .find({
+      isViewd: false,
+      status: "1",
+    })
+    .toArray();
+
+  res.status(200).json(finalOrders);
+});
+
 router.post("/api/order/byDate", async (req, res, next) => {
   const db = req.app.db;
   let finalOrders = [];
@@ -239,7 +256,7 @@ router.post("/api/order/updateCCPayment", async (req, res, next) => {
       });
       return;
     }
-    
+
     const zdCreditCredentials = storeData.credentials;
 
     const data = {
@@ -295,55 +312,49 @@ router.post("/api/order/updateCCPayment", async (req, res, next) => {
           // //smsService.sendSMS(customer.phone, smsContent, req);
           smsService.sendSMS("0536660444", smsContent, req);
           smsService.sendSMS("0542454362", smsContent, req);
-          
-          setTimeout(async () => {
-            
-  
-          await invoiceMailService.saveInvoice(docId, req);
 
-          await turl
-            .shorten(
-              `https://creme-caramel-images.fra1.cdn.digitaloceanspaces.com/invoices/doc-${docId}.pdf`
-            )
-            .then(async (res) => {
-              console.log(res);
-              await db.orders.updateOne(
-                {
-                  _id: getId(parsedBodey.orderId),
-                },
-                {
-                  $set: {
-                    ccPaymentRefData: {
-                      payload: parsedBodey,
-                      data: response.data,
-                      url: res,
+          setTimeout(async () => {
+            await invoiceMailService.saveInvoice(docId, req);
+
+            await turl
+              .shorten(
+                `https://creme-caramel-images.fra1.cdn.digitaloceanspaces.com/invoices/doc-${docId}.pdf`
+              )
+              .then(async (res) => {
+                console.log(res);
+                await db.orders.updateOne(
+                  {
+                    _id: getId(parsedBodey.orderId),
+                  },
+                  {
+                    $set: {
+                      ccPaymentRefData: {
+                        payload: parsedBodey,
+                        data: response.data,
+                        url: res,
+                      },
                     },
                   },
-                },
-                { multi: false }
-              );
+                  { multi: false }
+                );
 
-              const invoiceSmsContent = smsService.getOrderInvoiceContent(res);
-              //smsService.sendSMS(customer.phone, smsContent, req);
-              //smsService.sendSMS("0536660444", smsContent, req);
-              smsService.sendSMS("0542454362", invoiceSmsContent, req);
+                const invoiceSmsContent =
+                  smsService.getOrderInvoiceContent(res);
+                //smsService.sendSMS(customer.phone, smsContent, req);
+                //smsService.sendSMS("0536660444", smsContent, req);
+                smsService.sendSMS("0542454362", invoiceSmsContent, req);
+              })
+              .catch((err) => {
+                //res.status(400).json({ errorMessage: err?.message });
+              });
 
-
-            })
-            .catch((err) => {
-              //res.status(400).json({ errorMessage: err?.message });
-            });
-
-
-
-          // res.status(200).json(response.data);
-        });
-      }, 60000);
-      res.status(200).json({ errorMessage: 'no invoice doc' });
-    }else{
-      res.status(200).json({ errorMessage: 'no invoice doc' });
+            // res.status(200).json(response.data);
+          });
+        }, 60000);
+      res.status(200).json({ errorMessage: "no invoice doc" });
+    } else {
+      res.status(200).json({ errorMessage: "no invoice doc" });
     }
-    
   } catch (err) {
     res.status(400).json({ errorMessage: err?.message });
   }
@@ -388,8 +399,11 @@ router.post(
       });
     }
     let locationQrCode = null;
-    if(parsedBodey.order.receipt_method == "DELIVERY"){
-      locationQrCode = await generateQR(parsedBodey?.order?.geo_positioning?.latitude, parsedBodey?.order?.geo_positioning?.longitude)
+    if (parsedBodey.order.receipt_method == "DELIVERY") {
+      locationQrCode = await generateQR(
+        parsedBodey?.order?.geo_positioning?.latitude,
+        parsedBodey?.order?.geo_positioning?.longitude
+      );
     }
     const orderDoc = {
       ...parsedBodey,
@@ -399,16 +413,17 @@ router.post(
           updatedItemsWithImages?.length > 0
             ? updatedItemsWithImages
             : parsedBodey.order.items,
-            geo_positioning:{
-              ...parsedBodey.order.geo_positioning,
-              qrURI: locationQrCode
-            }
+        geo_positioning: {
+          ...parsedBodey.order.geo_positioning,
+          qrURI: locationQrCode,
+        },
       },
       created: new Date(),
       customerId,
       orderId: generatedOrderId,
       status: isCreditCardPay ? "0" : "1",
       isPrinted: false,
+      isViewd: false,
     };
 
     // insert order into DB
@@ -696,9 +711,7 @@ router.post("/api/order/update", auth.required, async (req, res) => {
     );
     const order = await db.orders.findOne({ _id: getId(req.body.orderId) });
     const customerId = order.customerId;
-    websockets.fireWebscoketEvent("order status updated", updateobj, [
-      customerId,
-    ]);
+    websockets.fireWebscoketEvent("order status updated", updateobj);
     const customer = await db.customers.findOne({
       _id: getId(order.customerId),
     });
@@ -709,7 +722,6 @@ router.post("/api/order/update", auth.required, async (req, res) => {
       return;
     }
     if (updateobj?.status == "2") {
-    
       let smsContent = "";
       switch (order.order.receipt_method) {
         case "TAKEAWAY":
@@ -731,21 +743,79 @@ router.post("/api/order/update", auth.required, async (req, res) => {
       smsService.sendSMS("0542454362", smsContent, req);
     }
 
-    if (updateobj?.status == "3") {
-      const smsContent = smsService.getOrderDeliveryCompanyContent(
-        customer.fullName,
-        order.orderId,
-        order.app_language,
-        order.orderDate
-      );
-      smsService.sendSMS("0536660444", smsContent, req);
-      smsService.sendSMS("0542454362", smsContent, req);
-    }
+    // if (updateobj?.status == "3") {
+    //   const smsContent = smsService.getOrderDeliveryCompanyContent(
+    //     customer.fullName,
+    //     order.orderId,
+    //     order.app_language,
+    //     order.orderDate
+    //   );
+    //   smsService.sendSMS("0536660444", smsContent, req);
+    //   smsService.sendSMS("0542454362", smsContent, req);
+    // }
 
     return res.status(200).json({ message: "Order successfully updated" });
   } catch (ex) {
     console.info("Error updating order", ex);
     return res.status(400).json({ message: "Failed to update the order" });
+  }
+});
+
+router.post("/api/order/update/viewd", auth.required, async (req, res) => {
+  const db = req.app.db;
+  try {
+    const updateobj = req.body.updateData;
+
+    await db.orders.updateOne(
+      {
+        _id: getId(req.body.orderId),
+      },
+      { $set: updateobj },
+      { multi: false }
+    );
+    websockets.fireWebscoketEvent("order viewed updated");
+  } catch (ex) {
+    console.info("Error updating order", ex);
+    return res.status(400).json({ message: "Failed to update the order" });
+  }
+});
+
+router.post("/api/order/book-delivery", auth.required, async (req, res) => {
+  const db = req.app.db;
+  try {
+    const updateobj = req.body.updateData;
+
+    await db.orders.updateOne(
+      {
+        _id: getId(req.body.orderId),
+      },
+      { $set: updateobj },
+      { multi: false }
+    );
+    const order = await db.orders.findOne({ _id: getId(req.body.orderId) });
+    const customerId = order.customerId;
+    websockets.fireWebscoketEvent("order status updated", updateobj);
+    const customer = await db.customers.findOne({
+      _id: getId(order.customerId),
+    });
+    if (!customer) {
+      res.status(400).json({
+        message: "Customer not found",
+      });
+      return;
+    }
+    const smsContent = smsService.getOrderDeliveryCompanyContent(
+      customer.fullName,
+      order.orderId,
+      order.app_language,
+      order.orderDate
+    );
+    smsService.sendSMS("0536660444", smsContent, req);
+    smsService.sendSMS("0542454362", smsContent, req);
+    websockets.fireWebscoketEvent("order delivery booked");
+  } catch (ex) {
+    console.info("Error order delivery booked", ex);
+    return res.status(400).json({ message: "order delivery booked" });
   }
 });
 
