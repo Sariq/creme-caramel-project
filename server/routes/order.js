@@ -774,6 +774,7 @@ router.post("/api/order/update/viewd", auth.required, async (req, res) => {
       { multi: false }
     );
     websockets.fireWebscoketEvent("order viewed updated");
+    return res.status(200).json({ message: "order viewed successfully updated" });
   } catch (ex) {
     console.info("Error updating order", ex);
     return res.status(400).json({ message: "Failed to update the order" });
@@ -813,6 +814,8 @@ router.post("/api/order/book-delivery", auth.required, async (req, res) => {
     smsService.sendSMS("0536660444", smsContent, req);
     smsService.sendSMS("0542454362", smsContent, req);
     websockets.fireWebscoketEvent("order delivery booked");
+    return res.status(200).json({ message: "order delivery booked successfully" });
+
   } catch (ex) {
     console.info("Error order delivery booked", ex);
     return res.status(400).json({ message: "order delivery booked" });
