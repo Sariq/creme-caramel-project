@@ -2,7 +2,10 @@ const axios = require('axios');
 const moment = require("moment");
 const apiPath = 'https://webapi.mymarketing.co.il/api/smscampaign/OperationalMessage';
 
-sendSMS = function ( phoneNumber, smsContent, req) {
+sendSMS = async function ( phoneNumber, smsContent, req) {
+  const activeTrailSecret = await app.db.amazonconfigs.findOne({app: "activetrail"});
+  const activeTrailSecretKey = activeTrailSecret.SECRET_KEY;
+  console.log("activeTrailSecretKey", activeTrailSecretKey);
     const smsData = {
         "details": {
           "name": "AAAA",
@@ -21,7 +24,7 @@ sendSMS = function ( phoneNumber, smsContent, req) {
       };
     return axios.post(apiPath, smsData, { 
         headers: {
-            "Authorization": req.app.activeTrailSecret,
+            "Authorization": activeTrailSecretKey,
           }
      })
     .then((response) => {
