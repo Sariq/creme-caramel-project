@@ -3,7 +3,7 @@ const moment = require("moment");
 const apiPath = 'https://webapi.mymarketing.co.il/api/smscampaign/OperationalMessage';
 
 sendSMS = async function ( phoneNumber, smsContent, req) {
-  const activeTrailSecret = await app.db.amazonconfigs.findOne({app: "activetrail"});
+  const activeTrailSecret = await req.app.db.amazonconfigs.findOne({app: "activetrail"});
   const activeTrailSecretKey = activeTrailSecret.SECRET_KEY;
   console.log("activeTrailSecretKey", activeTrailSecretKey);
     const smsData = {
