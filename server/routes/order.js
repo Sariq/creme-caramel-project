@@ -338,11 +338,11 @@ router.post("/api/order/updateCCPayment", async (req, res, next) => {
                   { multi: false }
                 );
 
-                const invoiceSmsContent =
-                  smsService.getOrderInvoiceContent(res);
-                //smsService.sendSMS(customer.phone, smsContent, req);
-                //smsService.sendSMS("0536660444", smsContent, req);
-                smsService.sendSMS("0542454362", invoiceSmsContent, req);
+                // const invoiceSmsContent =
+                //   smsService.getOrderInvoiceContent(res);
+                // //smsService.sendSMS(customer.phone, smsContent, req);
+                // //smsService.sendSMS("0536660444", smsContent, req);
+                // smsService.sendSMS("0542454362", invoiceSmsContent, req);
               })
               .catch((err) => {
                 //res.status(400).json({ errorMessage: err?.message });
