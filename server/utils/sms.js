@@ -22,19 +22,19 @@ sendSMS = async function ( phoneNumber, smsContent, req) {
           }
         ]
       };
-    return axios.post(apiPath, smsData, { 
-        headers: {
-            "Authorization": activeTrailSecretKey,
-          }
-     })
-    .then((response) => {
-        if(response.status === 200){
-            console.info('Successfully sent sms');
-        }
-    })
-    .catch((err) => {
-        console.log('Error sending sms:', err);
-    });
+    // return axios.post(apiPath, smsData, { 
+    //     headers: {
+    //         "Authorization": activeTrailSecretKey,
+    //       }
+    //  })
+    // .then((response) => {
+    //     if(response.status === 200){
+    //         console.info('Successfully sent sms');
+    //     }
+    // })
+    // .catch((err) => {
+    //     console.log('Error sending sms:', err);
+    // });
     
 };
 

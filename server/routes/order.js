@@ -129,14 +129,33 @@ router.get("/api/order/admin/not-printed", async (req, res, next) => {
 
 router.get("/api/order/admin/not-viewd", async (req, res, next) => {
   const db = req.app.db;
-  let finalOrders = [];
 
-  finalOrders = await db.orders
+  const orders = await db.orders
     .find({
       isViewd: false,
       status: "1",
     })
     .toArray();
+    const finalOrders =[];
+    for (const order of orders) {
+      const customer = await db.customers.findOne({
+        _id: getId(order.customerId),
+      });
+      if (customer) {
+        // const dataUri = await textToImage.generate(customer.fullName, {
+        //   maxWidth: 200,
+        //   textAlign: "center",
+        // });
+        finalOrders.push({
+          ...order,
+          customerDetails: {
+            name: customer.fullName,
+            phone: customer.phone,
+            // recipetName: dataUri,
+          },
+        });
+      }
+    }
 
   res.status(200).json(finalOrders);
 });

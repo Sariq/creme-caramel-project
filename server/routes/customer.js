@@ -117,7 +117,7 @@ router.post("/api/customer/create", async (req, res) => {
       },
       { multi: false, returnOriginal: false }
     );
-    res.status(200).json({ phone: req.body.phone });
+    res.status(200).json({ phone: req.body.phone, isBlocked: customer.isBlocked  });
     if (
       customer.phone !== "0542454362" &&
       customer.phone !== "0528602121" &&
@@ -196,6 +196,7 @@ router.post("/api/customer/admin-create", async (req, res) => {
         fullName: customer.fullName,
         isAdmin: customer.isAdmin,
         customerId: customer._id,
+        isBlocked: customer.isBlocked,
         isExist: true,
       });
 
@@ -913,6 +914,22 @@ router.post("/api/customer/logout", auth.required, async (req, res) => {
   );
 
   res.status(200).json({ data: "logout success" });
+});
+
+router.post("/api/customer/delete", auth.required, async (req, res) => {
+  const db = req.app.db;
+  const {
+    auth: { id },
+  } = req;
+  await db.customers.findOneAndUpdate(
+    { _id: getId(id) },
+    {
+      $set: { isBlocked: true },
+    },
+    { multi: false, returnOriginal: false }
+  );
+
+  res.status(200).json({ data: "blocked success" });
 });
 
 // logout the customer
