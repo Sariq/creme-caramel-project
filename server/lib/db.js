@@ -42,6 +42,7 @@ function initDb(dbUrl, callback){ // eslint-disable-line
         db.locationPolygon = db.collection('location-polygon');
         db.store = db.collection('store');
         db.calander = db.collection('calander');
+        db.clientError = db.collection('client-error');
         db.translations = db.collection('translations');
         db.images = db.collection('images');
 
