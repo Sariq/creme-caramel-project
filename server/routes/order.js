@@ -65,10 +65,10 @@ router.post(
       status: { $in: statusList },
     };
     if (ordersDate) {
-      var start = moment(ordersDate);
+      var start = moment(ordersDate).utcOffset(120);
       start.set({ hour: 0, minute: 0, second: 0, millisecond: 0 });
 
-      var end = moment(ordersDate);
+      var end = moment(ordersDate).utcOffset(120);
       end.set({ hour: 23, minute: 59, second: 59, millisecond: 999 });
       // filterBy["$or"] = [
       //   { orderDate: { $gte: start.format(), $lt: end.format() } },
@@ -158,6 +158,20 @@ router.get("/api/order/admin/not-viewd", async (req, res, next) => {
     }
 
   res.status(200).json(finalOrders);
+});
+
+router.get("/api/order/customer-invoices",  auth.required,
+async (req, res, next) => {
+  const db = req.app.db;
+  const customerId = req.auth.id;
+
+  const orders = await db.orders
+    .find({
+      customerId: customerId,
+      "order.payment_method": "CREDITCARD"
+    })
+    .toArray();
+  res.status(200).json(orders);
 });
 
 router.post("/api/order/byDate", async (req, res, next) => {
