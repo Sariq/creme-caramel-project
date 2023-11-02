@@ -18,6 +18,7 @@ const colors = require("colors");
 const cron = require("node-cron");
 const crypto = require("crypto");
 const websockets = require("./utils/websockets");
+const smsService = require("./utils/sms");
 
 const {
   getConfig,
@@ -63,6 +64,8 @@ const transactions = require("./routes/transactions");
 const reviews = require("./routes/reviews");
 
 const app = express();
+
+
 
 app.enable("trust proxy");
 app.use(helmet());
@@ -185,6 +188,15 @@ initDb(config.databaseConnectionString, async (err, db) => {
   app.db = db;
   app.config = config;
   app.port = app.get("port");
+
+
+cron.schedule("0 0 * * *", function () {
+  console.log("---------------------");
+  console.log("running a task every 1 minute");
+  //clients = {};
+  smsService.checkSMSBalance(app.db);
+
+});
 
   // Fire up the cron job to clear temp held stock
   cron.schedule("*/1 * * * *", async () => {

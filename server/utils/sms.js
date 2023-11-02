@@ -1,7 +1,9 @@
 const axios = require('axios');
 const moment = require("moment");
-const apiPath = 'https://webapi.mymarketing.co.il/api/smscampaign/OperationalMessage';
+const cron = require("node-cron");
 
+const apiPath = 'https://webapi.mymarketing.co.il/api/smscampaign/OperationalMessage';
+const apiBalance = 'https://webapi.mymarketing.co.il/api/account/balance';
 sendSMS = async function ( phoneNumber, smsContent, req) {
   const activeTrailSecret = await req.app.db.amazonconfigs.findOne({app: "activetrail"});
   const activeTrailSecretKey = activeTrailSecret.SECRET_KEY;
@@ -22,21 +24,48 @@ sendSMS = async function ( phoneNumber, smsContent, req) {
           }
         ]
       };
-    // return axios.post(apiPath, smsData, { 
-    //     headers: {
-    //         "Authorization": activeTrailSecretKey,
-    //       }
-    //  })
-    // .then((response) => {
-    //     if(response.status === 200){
-    //         console.info('Successfully sent sms');
-    //     }
-    // })
-    // .catch((err) => {
-    //     console.log('Error sending sms:', err);
-    // });
+    return axios.post(apiPath, smsData, { 
+        headers: {
+            "Authorization": activeTrailSecretKey,
+          }
+     })
+    .then((response) => {
+        if(response.status === 200){
+            console.info('Successfully sent sms');
+        }
+    })
+    .catch((err) => {
+        console.log('Error sending sms:', err);
+    });
     
 };
+
+checkSMSBalance = async function (db) {
+  const activeTrailSecret = await db.amazonconfigs.findOne({app: "activetrail"});
+  const activeTrailSecretKey = activeTrailSecret.SECRET_KEY;
+  console.log("activeTrailSecretKey", activeTrailSecretKey);
+    return axios.get(apiBalance, { 
+        headers: {
+            "Authorization": activeTrailSecretKey,
+          }
+     })
+    .then((response) => {
+        if(response.status === 200){
+            console.info('check sms balance', response);
+            if(response.data.sms.credits < 300){
+              const smsContent = getSMSBalanceContent(
+                response.data.sms.credits
+              );
+              //smsService.sendSMS(customer.phone, smsContent, req);
+              sendSMS("0536660444", smsContent, req);
+            }
+        }
+    })
+    .catch((err) => {
+        console.log('Error sending sms:', err);
+    });
+}
+
 
 
 
@@ -81,6 +110,10 @@ getVerifyCodeContent = function (verifyCode) {
     return `קוד האימות שלך הוא: ${verifyCode}`;
 }
 
+getSMSBalanceContent = function (credits) {
+    return `עדכן את חבילת ה סמס, נשארו: ${credits}`;
+}
+
 getOrderInvoiceContent = function (invoiceUrl) {
   return `מצורף לינק לחשבונית לצפייה: ${invoiceUrl}`;
 }
@@ -93,5 +126,6 @@ const smsService = {
     getOrderTakeawayReadyContent: getOrderTakeawayReadyContent,
     getOrderDeliveryReadyContent: getOrderDeliveryReadyContent,
     getOrderDeliveryCompanyContent: getOrderDeliveryCompanyContent,
+    checkSMSBalance: checkSMSBalance,
 };
 module.exports = smsService;
