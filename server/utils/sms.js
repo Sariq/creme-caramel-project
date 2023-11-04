@@ -2,32 +2,38 @@ const axios = require('axios');
 const moment = require("moment");
 const cron = require("node-cron");
 
-const apiPath = 'https://webapi.mymarketing.co.il/api/smscampaign/OperationalMessage';
-const apiBalance = 'https://webapi.mymarketing.co.il/api/account/balance';
-sendSMS = async function ( phoneNumber, smsContent, req) {
-  const activeTrailSecret = await req.app.db.amazonconfigs.findOne({app: "activetrail"});
-  const activeTrailSecretKey = activeTrailSecret.SECRET_KEY;
-  console.log("activeTrailSecretKey", activeTrailSecretKey);
-    const smsData = {
-        "details": {
-          "name": "AAAA",
-          "from_name": "CremeCarame",
-          "sms_sending_profile_id": 0,
-          "content": smsContent
-        },
-        "scheduling": {
-          "send_now": true,
-        },
-        "mobiles": [
-          {
-            "phone_number": phoneNumber
-          }
-        ]
-      };
-    return axios.post(apiPath, smsData, { 
+const apiPath = 'https://api.sms4free.co.il/ApiSMS/SendSMS';
+const apiBalance = 'https://api.sms4free.co.il/ApiSMS/AvailableSMS';
+
+const key = "gDXTIsRwF";
+const user = "0542454362";
+const pass = "48840537";
+const sender = "CremeCarame";
+
+sendSMS = async function ( phoneNumber, smsContent, req, db = null) {
+  let sms4freeSecret = null;
+  if(req){
+     sms4freeSecret = await req.app.db.amazonconfigs.findOne({app: "sms4free"});
+  }else{
+    sms4freeSecret = await db.amazonconfigs.findOne({app: "sms4free"});
+  }
+  const key = sms4freeSecret.SECRET_KEY;
+  const user = sms4freeSecret.USER;
+  const pass = sms4freeSecret.PASSWORD;
+  const sender = "0536660444";// sms4freeSecret.SENDER_NAME;
+
+  const requestObject = {
+    key ,
+    user,
+    pass,
+    sender,
+    recipient: phoneNumber,
+    msg: smsContent
+    }
+    return axios.post(apiPath, requestObject, { 
         headers: {
-            "Authorization": activeTrailSecretKey,
-          }
+          "Content-Type": 'application/json',
+        }
      })
     .then((response) => {
         if(response.status === 200){
@@ -41,23 +47,35 @@ sendSMS = async function ( phoneNumber, smsContent, req) {
 };
 
 checkSMSBalance = async function (db) {
-  const activeTrailSecret = await db.amazonconfigs.findOne({app: "activetrail"});
-  const activeTrailSecretKey = activeTrailSecret.SECRET_KEY;
-  console.log("activeTrailSecretKey", activeTrailSecretKey);
-    return axios.get(apiBalance, { 
+
+  const sms4freeSecret = await db.amazonconfigs.findOne({app: "sms4free"});
+  const key = sms4freeSecret.SECRET_KEY;
+  const user = sms4freeSecret.USER;
+  const pass = sms4freeSecret.PASSWORD;
+
+const requestObject = {
+key,
+user,
+pass,
+}
+
+  // const activeTrailSecret = await db.amazonconfigs.findOne({app: "activetrail"});
+  // const activeTrailSecretKey = activeTrailSecret.SECRET_KEY;
+  // console.log("activeTrailSecretKey", activeTrailSecretKey);
+    return axios.post(apiBalance, requestObject, { 
         headers: {
-            "Authorization": activeTrailSecretKey,
+            "Content-Type": 'application/json',
           }
      })
     .then((response) => {
         if(response.status === 200){
             console.info('check sms balance', response);
-            if(response.data.sms.credits < 300){
+            if(response.data< 300){
               const smsContent = getSMSBalanceContent(
-                response.data.sms.credits
+                response.data
               );
               //smsService.sendSMS(customer.phone, smsContent, req);
-              sendSMS("0536660444", smsContent, req);
+              sendSMS("0542454362", smsContent, null, db);
             }
         }
     })

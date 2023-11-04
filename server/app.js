@@ -192,9 +192,8 @@ initDb(config.databaseConnectionString, async (err, db) => {
 
 cron.schedule("0 0 * * *", function () {
   console.log("---------------------");
-  console.log("running a task every 1 minute");
-  //clients = {};
-  smsService.checkSMSBalance(app.db);
+  console.log("running a task every 1 day");
+ // smsService.checkSMSBalance(app.db);
 
 });
 
