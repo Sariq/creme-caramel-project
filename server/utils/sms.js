@@ -5,11 +5,6 @@ const cron = require("node-cron");
 const apiPath = 'https://api.sms4free.co.il/ApiSMS/SendSMS';
 const apiBalance = 'https://api.sms4free.co.il/ApiSMS/AvailableSMS';
 
-const key = "gDXTIsRwF";
-const user = "0542454362";
-const pass = "48840537";
-const sender = "CremeCarame";
-
 sendSMS = async function ( phoneNumber, smsContent, req, db = null) {
   let sms4freeSecret = null;
   if(req){
@@ -20,7 +15,7 @@ sendSMS = async function ( phoneNumber, smsContent, req, db = null) {
   const key = sms4freeSecret.SECRET_KEY;
   const user = sms4freeSecret.USER;
   const pass = sms4freeSecret.PASSWORD;
-  const sender = "0536660444";// sms4freeSecret.SENDER_NAME;
+  const sender = sms4freeSecret.SENDER_NAME;
 
   const requestObject = {
     key ,
