@@ -109,7 +109,7 @@ router.post(
     console.log("finalOrders", finalOrders);
     // If API request, return json
     // if(req.apiAuthenticated){
-    res.status(200).json(finalOrders);
+    res.status(200).json({ordersList: finalOrders, totalItems: orders?.totalItems});
     // }
   }
 );
