@@ -681,5 +681,52 @@ router.post("/api/order/printed", auth.required, async (req, res) => {
     return res.status(400).json({ message: "Failed to print the order" });
   }
 });
+function relDiff(a, b) {
+  let diff =  100 * Math.abs( ( a - b ) / ( (a+b)/2 ) );
+  if(a<b){
+    diff = diff * -1;
+  }
+  return diff.toFixed(2);
+ }
+router.post("/api/order/statistics/new-orders/:page?", async (req, res) => {
+  const db = req.app.db;
+  let pageNum = 1;
+  if (req.body.pageNumber) {
+    pageNum = req.body.pageNumber;
+  }
+  var start = moment().subtract(7, 'days').utcOffset(120);
+  start.set({ hour: 0, minute: 0, second: 0, millisecond: 0 });
+
+  var end = moment().utcOffset(120);
+  end.set({ hour: 23, minute: 59, second: 59, millisecond: 999 });
+  const filterBy = {
+    created: { $gte: new Date(start), $lt: new Date(end) },
+  };
+  let newOrders = await paginateData(true, req, pageNum, "orders", filterBy, {
+    created: 1,
+  });
+
+  var start2 = moment().subtract(14, 'days').utcOffset(120);
+  start2.set({ hour: 0, minute: 0, second: 0, millisecond: 0 });
+
+  var end2 = moment().subtract(8, 'days').utcOffset(120);
+  end2.set({ hour: 23, minute: 59, second: 59, millisecond: 999 });
+  const filterBy2 = {
+    created: { $gte: new Date(start2), $lt: new Date(end2) },
+  };
+  const prevWeekNewOrders = await paginateData(true, req, pageNum, "orders", filterBy2, {
+    created: 1,
+  });
+ const percentDeff = relDiff(newOrders.totalItems, prevWeekNewOrders.totalItems);
+ newOrders.percentDeff = percentDeff;
+  try {
+    res.status(200).json(newOrders);
+  } catch (ex) {
+    console.error(colors.red("Failed to search customer: ", ex));
+    res.status(400).json({
+      message: "Customer search failed.",
+    });
+  }
+});
 
 module.exports = router;

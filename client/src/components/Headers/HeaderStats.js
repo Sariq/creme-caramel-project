@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 
 import getNewCustomersApi from "../../apis/admin/customers/get-new-customers"
+import getStatisticsNewOrdersApi from "../../apis/admin/order/get-statistics-new-customers"
 
 // components
 
@@ -10,14 +11,20 @@ import CategoryCard from "components/Cards/CardCategory";
 export default function HeaderStats() {
 
   const [newCustomersData, setNewCustomersData] = useState(null);
+  const [newOrderssData, setNewOrderssData] = useState(null);
 
   const getNewCustomers = async () => {
     const newCustomers = await getNewCustomersApi(1);
-    console.log("sss", newCustomers)
     setNewCustomersData(newCustomers)
   }
+  const getNewOrders = async () => {
+    const newOrders = await getStatisticsNewOrdersApi(1);
+    setNewOrderssData(newOrders)
+  }
+
   useEffect(()=>{
     getNewCustomers();
+    getNewOrders();
   },[])
   return (
     <>
@@ -40,12 +47,12 @@ export default function HeaderStats() {
                 />              </div>
               <div className="w-full lg:w-6/12 xl:w-3/12 px-4">
                 <CardStats
-                  statSubtitle="NEW USERS"
-                  statTitle="2,356"
-                  statArrow="down"
-                  statPercent="3.48"
-                  statPercentColor="text-red-500"
-                  statDescripiron="Since last week"
+                  statSubtitle="הזמנות חדשות"
+                  statTitle={newOrderssData?.totalItems}
+                  statArrow={newOrderssData?.percentDeff > 0 ? "up" : "down"}
+                  statPercent={Math.abs(newOrderssData?.percentDeff)}
+                  statPercentColor={newOrderssData?.percentDeff > 0 ? "text-emerald-500" : "text-red-500"}
+                  statDescripiron=" יחסית לשבוע שעבר"
                   statIconName="fas fa-chart-pie"
                   statIconColor="bg-orange-500"
                 />
