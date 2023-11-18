@@ -1,4 +1,6 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+
+import getNewCustomersApi from "../../apis/admin/customers/get-new-customers"
 
 // components
 
@@ -6,6 +8,17 @@ import CardStats from "components/Cards/CardStats.js";
 import CategoryCard from "components/Cards/CardCategory";
 
 export default function HeaderStats() {
+
+  const [newCustomersData, setNewCustomersData] = useState(null);
+
+  const getNewCustomers = async () => {
+    const newCustomers = await getNewCustomersApi(1);
+    console.log("sss", newCustomers)
+    setNewCustomersData(newCustomers)
+  }
+  useEffect(()=>{
+    getNewCustomers();
+  },[])
   return (
     <>
       {/* Header */}
@@ -16,12 +29,12 @@ export default function HeaderStats() {
             <div className="flex flex-wrap">
               <div className="w-full lg:w-6/12 xl:w-3/12 px-4">
               <CardStats
-                  statSubtitle="NEW USERS"
-                  statTitle="2,356"
-                  statArrow="down"
-                  statPercent="3.48"
-                  statPercentColor="text-red-500"
-                  statDescripiron="Since last week"
+                  statSubtitle="משתמשים חדשים"
+                  statTitle={newCustomersData?.totalItems}
+                  statArrow={newCustomersData?.percentDeff > 0 ? "up" : "down"}
+                  statPercent={Math.abs(newCustomersData?.percentDeff)}
+                  statPercentColor={newCustomersData?.percentDeff > 0 ? "text-emerald-500" : "text-red-500"}
+                  statDescripiron=" יחסית לשבוע שעבר"
                   statIconName="fas fa-chart-pie"
                   statIconColor="bg-orange-500"
                 />              </div>

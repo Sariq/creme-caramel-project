@@ -14,7 +14,7 @@ const OrderdsPage = () => {
   };
 
   useEffect(() => {
-    setInterval(()=>{handleGetOrdersList()}, 1000);
+    handleGetOrdersList();
 
    
   },[]);
