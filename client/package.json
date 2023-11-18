@@ -19,7 +19,7 @@
     "react-scripts": "5.0.1"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "serve -s build",
     "build": "react-scripts build && gulp licenses",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
@@ -56,6 +56,5 @@
     "postcss": "^8.4.17",
     "tailwindcss": "^3.1.8",
     "webpack": "^5.74.0"
-  },
-  "homepage": ""
+  }
 }
