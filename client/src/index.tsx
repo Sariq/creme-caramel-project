@@ -14,8 +14,8 @@ import Auth from "layouts/Auth.js";
 import Landing from "views/Landing.js";
 import Profile from "views/Profile.js";
 import Index from "views/Index.js";
-import Login from "views/auth/Login.js";
-import Register from "views/auth/Register.js";
+import Login from "views/auth/Login";
+import Register from "views/auth/Register";
 
 // views
 

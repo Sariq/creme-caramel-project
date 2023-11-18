@@ -1,13 +1,14 @@
 import { Link } from "react-router-dom";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { BASE_URL } from "consts/api";
 
 export default function Login() {
   const navigate = useNavigate();
 
   const handlLogin = () => {
     axios
-      .post(process.env.REACT_APP_API+"admin/login_action", {
+      .post(BASE_URL+"admin/login_action", {
         email: 'sari.proj@gmail.com',
         password: 'London2020!'
       })

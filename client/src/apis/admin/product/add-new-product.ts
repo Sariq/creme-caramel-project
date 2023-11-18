@@ -1,4 +1,5 @@
 import axios from "axios";
+import { BASE_URL } from "consts/api";
 import { TProduct } from "shared/types/product";
 
 
@@ -11,7 +12,7 @@ export const addNewProductApi = (product: TProduct) => {
     product.price && formData.append('price', product.price.toString())
     console.log("IMMMAGE", product.img)
     return axios
-      .post(process.env.REACT_APP_API+"admin/product/insert",formData,{})
+      .post(BASE_URL+"admin/product/insert",formData,{})
       .then(function (response) {
           console.log("added success", response);
           return response.data;

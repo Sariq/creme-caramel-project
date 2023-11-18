@@ -1,9 +1,10 @@
 import React from "react";
 import axios from "axios";
+import { BASE_URL } from "consts/api";
 export default function Register() {
   const handleSignUp = () => {
     axios
-      .post(process.env.REACT_APP_API + 'customer/create', {
+      .post(BASE_URL + 'customer/create', {
         password: '123456',
         fullName: 'user user',
         phone: '0542454362',

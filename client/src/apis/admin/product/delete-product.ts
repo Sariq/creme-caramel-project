@@ -1,9 +1,10 @@
 import axios from "axios";
+import { BASE_URL } from "consts/api";
 
 export const deleteProductApi = (idsList: string[]) => {
    
     return axios
-      .post(process.env.REACT_APP_API+"admin/product/delete", {
+      .post(BASE_URL+"admin/product/delete", {
         productsIdsList: idsList,
       })
       .then(function (response) {

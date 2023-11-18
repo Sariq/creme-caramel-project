@@ -1,8 +1,9 @@
 import axios from "axios";
+import { BASE_URL } from "consts/api";
 
 export const getProductApi = (id: string) => {
     return axios
-      .get(`${process.env.REACT_APP_API}admin/product/${id}`)
+      .get(`${BASE_URL}admin/product/${id}`)
       .then(function (response) {
           console.log("get product success", response);
           return response.data;
