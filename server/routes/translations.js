@@ -1,26 +1,11 @@
 const express = require("express");
 const router = express.Router();
-const colors = require("colors");
-
-const { paginateData } = require("../lib/paginate");
-
-const a = {
-  key1: {
-    ar: " aa",
-    he: "bb",
-  },
-  key2: {
-    ar: " aa",
-    he: "bb",
-  },
-};
 
 router.get("/api/getTranslations", async (req, res, next) => {
   const db = req.app.db;
 
   const dbTranslations = await db.translations
     .find()
-    // .sort({ created: -1 })
     .toArray();
   const arTranslations = {};
   const heTranslations = {};
@@ -55,7 +40,6 @@ router.post("/api/translations/update", async (req, res, next) => {
 
   const dbTranslations = await db.translations
     .find()
-    // .sort({ created: -1 })
     .toArray();
 
   const arTranslations = {};
@@ -82,7 +66,6 @@ router.post("/api/translations/add", async (req, res, next) => {
 
   const dbTranslations = await db.translations
     .find()
-    // .sort({ created: -1 })
     .toArray();
 
   const arTranslations = {};
@@ -106,7 +89,6 @@ router.get("/api/getTranslations", async (req, res, next) => {
 
   const dbTranslations = await db.translations
     .find()
-    // .sort({ created: -1 })
     .toArray();
   const arTranslations = {};
   const heTranslations = {};

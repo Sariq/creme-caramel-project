@@ -1,7 +1,6 @@
 const express = require("express");
 const auth = require("./auth");
 const orderid = require("order-id")("key");
-const textToImage = require("text-to-image");
 const websockets = require("../utils/websockets");
 const smsService = require("../utils/sms");
 const invoiceMailService = require("../utils/invoice-mail");
@@ -10,20 +9,13 @@ var multer = require("multer");
 const upload = multer({ storage: multer.memoryStorage() });
 const turl = require("turl");
 var QRCode = require("qrcode");
-
 const axios = require("axios");
 
 const {
   clearSessionValue,
-  getCountryList,
   getId,
-  sendEmail,
-  getEmailTemplate,
-  clearCustomer,
-  sanitize,
 } = require("../lib/common");
 const { paginateData } = require("../lib/paginate");
-const { emptyCart } = require("../lib/cart");
 const { restrict, checkAccess } = require("../lib/auth");
 const { indexOrders } = require("../lib/indexing");
 const moment = require("moment");
@@ -142,16 +134,12 @@ router.get("/api/order/admin/not-viewd", async (req, res, next) => {
         _id: getId(order.customerId),
       });
       if (customer) {
-        // const dataUri = await textToImage.generate(customer.fullName, {
-        //   maxWidth: 200,
-        //   textAlign: "center",
-        // });
+
         finalOrders.push({
           ...order,
           customerDetails: {
             name: customer.fullName,
             phone: customer.phone,
-            // recipetName: dataUri,
           },
         });
       }
@@ -188,86 +176,6 @@ router.post("/api/order/byDate", async (req, res, next) => {
     .toArray();
 
   res.status(200).json(finalOrders);
-});
-
-// Admin section
-router.get(
-  "/admin/orders/bystatus/:orderstatus",
-  restrict,
-  async (req, res, next) => {
-    const db = req.app.db;
-
-    if (typeof req.params.orderstatus === "undefined") {
-      res.redirect("/admin/orders");
-      return;
-    }
-
-    // case insensitive search
-    const regex = new RegExp(["^", req.params.orderstatus, "$"].join(""), "i");
-    const orders = await db.orders
-      .find({ orderStatus: regex })
-      .sort({ orderDate: -1 })
-      .limit(10)
-      .toArray();
-
-    // If API request, return json
-    if (req.apiAuthenticated) {
-      res.status(200).json({
-        orders,
-      });
-      return;
-    }
-
-    res.render("orders", {
-      title: "Cart",
-      orders: orders,
-      admin: true,
-      filteredOrders: true,
-      filteredStatus: req.params.orderstatus,
-      config: req.app.config,
-      session: req.session,
-      message: clearSessionValue(req.session, "message"),
-      messageType: clearSessionValue(req.session, "messageType"),
-      helpers: req.handlebars.helpers,
-    });
-  }
-);
-
-// render the editor
-router.get("/admin/order/view/:id", restrict, async (req, res) => {
-  const db = req.app.db;
-  const order = await db.orders.findOne({ _id: getId(req.params.id) });
-  const transaction = await db.transactions.findOne({
-    _id: getId(order.transaction),
-  });
-
-  res.render("order", {
-    title: "View order",
-    result: order,
-    transaction,
-    config: req.app.config,
-    session: req.session,
-    message: clearSessionValue(req.session, "message"),
-    messageType: clearSessionValue(req.session, "messageType"),
-    editor: true,
-    admin: true,
-    helpers: req.handlebars.helpers,
-  });
-});
-
-// render the editor
-router.get("/admin/order/create", restrict, async (req, res) => {
-  res.render("order-create", {
-    title: "Create order",
-    config: req.app.config,
-    session: req.session,
-    message: clearSessionValue(req.session, "message"),
-    messageType: clearSessionValue(req.session, "messageType"),
-    countryList: getCountryList(),
-    editor: true,
-    admin: true,
-    helpers: req.handlebars.helpers,
-  });
 });
 
 router.post("/api/order/updateCCPayment", async (req, res, next) => {
@@ -403,12 +311,7 @@ router.post(
     const parsedBodey = JSON.parse(req.body.body);
     const customerId = parsedBodey.customerId || req.auth.id;
     const isCreditCardPay = parsedBodey.order.payment_method == "CREDITCARD";
-    // // Check if cart is empty
-    // if(!req.session.cart){
-    //     res.status(400).json({
-    //         message: 'The cart is empty. You will need to add items to the cart first.'
-    //     });
-    // }
+
     const generatedOrderId = orderid.generate();
     let imagesList = [];
     if (req.files && req.files.length > 0) {
@@ -458,12 +361,8 @@ router.post(
       isPrinted: false,
       isViewd: false,
     };
-
-    // insert order into DB
     try {
       const newDoc = await db.orders.insertOne(orderDoc);
-
-      // get the new ID
       const orderId = newDoc.insertedId;
       const customer = await db.customers.findOne({
         _id: getId(customerId),
@@ -475,7 +374,7 @@ router.post(
         return;
       }
 
-      const updatedCustomer = await db.customers.findOneAndUpdate(
+      await db.customers.findOneAndUpdate(
         { _id: getId(customerId) },
         {
           $set: {
@@ -499,22 +398,8 @@ router.post(
           { $set: updatedProduct },
           {}
         );
-        // Update the index
-        //     indexProducts(req.app).then(() => {
-        //       res
-        //         .status(200)
-        //         .json({ message: "Successfully saved", product: productDoc });
-        //     });
-        //   } catch (ex) {
-        //     res.status(400).json({ message: "Failed to save. Please try again" });
-        //   }
       });
 
-      console.log("fire websocket order");
-      const dataUri = await textToImage.generate(customer.fullName, {
-        maxWidth: 200,
-        textAlign: "center",
-      });
       const finalOrderDoc = {
         ...orderDoc,
         customerDetails: {
@@ -536,13 +421,8 @@ router.post(
         websockets.fireWebscoketEvent("new order", finalOrderDoc);
       }
 
-      // https://www.waze.com/ul?ll=32.23930691837541,34.95049682449079&navigate=yes&zoom=17
-      // add to lunr index
+
       indexOrders(req.app).then(() => {
-        // send the email with the response
-        // TODO: Should fix this to properly handle result
-        //sendEmail(req.session.paymentEmailAddr, `Your order with ${config.cartTitle}`, getEmailTemplate(paymentResults));
-        // redirect to outcome
         res.status(200).json({
           message: "Order created successfully",
           orderId,
@@ -567,12 +447,6 @@ router.post(
     const db_orderId = parsedBodey.db_orderId;
     const orderId = parsedBodey.orderId;
 
-    // // Check if cart is empty
-    // if(!req.session.cart){
-    //     res.status(400).json({
-    //         message: 'The cart is empty. You will need to add items to the cart first.'
-    //     });
-    // }
     let imagesList = [];
     if (req.files && req.files.length > 0) {
       imagesList = await imagesService.uploadImage(req.files, req, "orders");
@@ -611,7 +485,6 @@ router.post(
       isPrinted: false,
     };
 
-    // insert order into DB
     try {
       await db.orders.updateOne(
         {
@@ -651,13 +524,7 @@ router.post(
       };
       websockets.fireWebscoketEvent("new order", finalOrderDoc);
 
-      // https://www.waze.com/ul?ll=32.23930691837541,34.95049682449079&navigate=yes&zoom=17
-      // add to lunr index
       indexOrders(req.app).then(() => {
-        // send the email with the response
-        // TODO: Should fix this to properly handle result
-        //sendEmail(req.session.paymentEmailAddr, `Your order with ${config.cartTitle}`, getEmailTemplate(paymentResults));
-        // redirect to outcome
         res.status(200).json({
           message: "Order created successfully",
         });
@@ -669,66 +536,6 @@ router.post(
   }
 );
 
-// Admin section
-router.get("/admin/orders/filter/:search", restrict, async (req, res, next) => {
-  const db = req.app.db;
-  const searchTerm = req.params.search;
-  const ordersIndex = req.app.ordersIndex;
-
-  const lunrIdArray = [];
-  ordersIndex.search(searchTerm).forEach((id) => {
-    lunrIdArray.push(getId(id.ref));
-  });
-
-  // we search on the lunr indexes
-  const orders = await db.orders.find({ _id: { $in: lunrIdArray } }).toArray();
-
-  // If API request, return json
-  if (req.apiAuthenticated) {
-    res.status(200).json({
-      orders,
-    });
-    return;
-  }
-
-  res.render("orders", {
-    title: "Order results",
-    orders: orders,
-    admin: true,
-    config: req.app.config,
-    session: req.session,
-    searchTerm: searchTerm,
-    message: clearSessionValue(req.session, "message"),
-    messageType: clearSessionValue(req.session, "messageType"),
-    helpers: req.handlebars.helpers,
-  });
-});
-
-// order product
-router.get("/admin/order/delete/:id", async (req, res) => {
-  const db = req.app.db;
-
-  // remove the order
-  try {
-    await db.orders.deleteOne({ _id: getId(req.params.id) });
-
-    // remove the index
-    indexOrders(req.app).then(() => {
-      res.status(200).json({
-        message: "Order successfully deleted",
-      });
-      return;
-    });
-  } catch (ex) {
-    console.log("Cannot delete order", ex);
-    res.status(200).json({
-      message: "Error deleting order",
-    });
-    return;
-  }
-});
-
-// update order
 router.post("/api/order/update", auth.required, async (req, res) => {
   const db = req.app.db;
   try {

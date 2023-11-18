@@ -11,8 +11,6 @@ router.get("/api/menu", async (req, res, next) => {
     if (req.params.page) {
       pageNum = req.params.page;
     }
-  
-    // Get our paginated data
     const categories = await paginateData(
       false,
       req,
@@ -35,7 +33,6 @@ router.get("/api/menu", async (req, res, next) => {
      Object.entries(grouped).forEach(([key, value]) => {
       grouped[key] = value.map((product)=> `https://creme-caramel-images.fra1.cdn.digitaloceanspaces.com/${product.img[0].uri}`)
     });
-     //delete grouped['5'];
       products.data.forEach(product => {
         if(product.categoryId != '5'){
           productsImagesList.push(`https://creme-caramel-images.fra1.cdn.digitaloceanspaces.com/${product.img[0].uri}`)
