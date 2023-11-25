@@ -25,7 +25,7 @@ router.get("/api/menu", async (req, res, next) => {
         pageNum,
         "products",
         {},
-        { createdAt: -1 }
+        { order: -1 }
       );
       const productsImagesList = [];
      const grouped =  _.groupBy(products.data, 'categoryId');

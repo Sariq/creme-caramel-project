@@ -102,17 +102,19 @@ const deleteImages = async (images, req) => {
   });
 };
 
-const addProductByImage = (image) => {
+const addProductByImage = async (image, db) => {
+  const countDocuments = await db.products.countDocuments({categoryId:"5",subCategoryId:"2"});
+
   let req = {};
   req.body = {
     nameAR: "كعكة ",
     nameHE: "עוגות ",
     categoryId: "5",
-    subCategoryId: "3",
+    subCategoryId: "2",
     cakeLevels: "2",
     descriptionAR: "شرح",
     descriptionHE: "הסבר",
-    mediumPrice: "10",
+    mediumPrice: "180",
     mediumCount: "20",
     isInStore: "true",
     isUploadImage: "false",
@@ -133,6 +135,7 @@ const addProductByImage = (image) => {
     isInStore: req.body.isInStore === "false" ? false : true,
     isUploadImage: req.body.isUploadImage === "false" ? false : true,
     createdAt: new Date(),
+    order: countDocuments
   };
 
   if (req.body.subCategoryId) {
@@ -211,7 +214,7 @@ router.post(
 
     if (imagesList?.length > 0) {
       for (const image of imagesList) {
-        // const doc = addProductByImage(image)
+        // const doc = await addProductByImage(image, db)
         // const newDoc = await db.products.insertOne(doc);
 
         const doc = {
@@ -257,6 +260,11 @@ router.post(
 
     if (req.body.subCategoryId) {
       doc.subCategoryId = req.body.subCategoryId;
+      const countDocuments = await db.products.countDocuments({categoryId:req.body.categoryId,subCategoryId:req.body.subCategoryId});
+      doc.order = countDocuments;
+    }else{
+      const countDocuments = await db.products.countDocuments({categoryId:req.body.categoryId});
+      doc.order = countDocuments;
     }
     doc.extras = {
       ...doc.extras,
@@ -478,6 +486,37 @@ router.post(
     res.status(200).json({ message: "Product successfully updated" });
   }
 );
+
+
+router.post("/api/admin/product/update/order", async (req, res) => {
+  const db = req.app.db;
+  const categoryId = req.body.categoryId;
+  const subCategoryId = req.body.subCategoryId;
+  const productsList = req.body.productsList;
+  let countDocuments = null;
+  if(subCategoryId){
+    countDocuments = await db.products.countDocuments({categoryId:categoryId.toString(),subCategoryId:subCategoryId.toString()});
+  }else{
+    countDocuments = await db.products.countDocuments({categoryId:categoryId.toString()});
+  }
+
+  try {
+    for (i=1; i <= productsList.length; i++) {
+      await db.products.updateOne(
+        { _id: getId(productsList[i-1]._id) },
+        { $set: { order:  countDocuments - i} },
+        { multi: false }
+      );
+    };
+
+    indexProducts(req.app).then(() => {
+      res.status(200).json({ message: "Product successfully ordered" });
+    });
+  } catch (e) {
+    console.log(e);
+    res.status(200).json({ message: e });
+  }
+});
 
 router.post("/api/admin/product/delete", async (req, res) => {
   const db = req.app.db;
