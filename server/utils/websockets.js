@@ -30,7 +30,6 @@ initWebSockets = function (server) {
       customerId = req.url?.split('=')[1];
     }
     const userId = customerId || uuid.v4();
-    console.log(`Recieved a new connection.`, connection);
     clients[userId]=connection;
     // Store the new connection and handle messages
     // console.log(`${userId} connected.`);

@@ -204,6 +204,7 @@ router.post("/api/order/updateCCPayment", async (req, res, next) => {
       TerminalNumber: zdCreditCredentials.credentials_terminal_number,
       Password: zdCreditCredentials.credentials_password,
       ReferenceID: parsedBodey.creditcard_ReferenceNumber,
+      ZCreditChargeResponse: parsedBodey.ZCreditChargeResponse
     };
     const docId = parsedBodey?.ZCreditInvoiceReceiptResponse?.DocumentID;
     if (docId) {
@@ -214,11 +215,6 @@ router.post("/api/order/updateCCPayment", async (req, res, next) => {
           { responseType: "application/json" }
         )
         .then(async (response) => {
-          if (response.data.HasError) {
-            await db.orders.deleteOne({ _id: parsedBodey.orderId });
-            res.status(200).json(response.data);
-            return;
-          }
           await db.orders.updateOne(
             {
               _id: getId(parsedBodey.orderId),
@@ -234,6 +230,12 @@ router.post("/api/order/updateCCPayment", async (req, res, next) => {
             },
             { multi: false }
           );
+          if (response.data.HasError) {
+            // await db.orders.deleteOne({ _id: parsedBodey.orderId });
+            res.status(200).json(response.data);
+            return;
+          }
+
           const finalOrderDoc = {
             ...orderDoc,
             customerDetails: {
@@ -292,8 +294,23 @@ router.post("/api/order/updateCCPayment", async (req, res, next) => {
             // res.status(200).json(response.data);
           });
         }, 60000);
-      res.status(200).json({ errorMessage: "no invoice doc" });
+      res.status(200).json({ errorMessage: "valid invoice doc" });
     } else {
+      await db.orders.updateOne(
+        {
+          _id: getId(parsedBodey.orderId),
+        },
+        {
+          $set: {
+            ccPaymentRefData: {
+              payload: parsedBodey,
+              data: 'no doc ID',
+            },
+            status: "1",
+          },
+        },
+        { multi: false }
+      );
       res.status(200).json({ errorMessage: "no invoice doc" });
     }
   } catch (err) {
