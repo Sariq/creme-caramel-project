@@ -178,6 +178,29 @@ router.post("/api/order/byDate", async (req, res, next) => {
   res.status(200).json(finalOrders);
 });
 
+router.post("/api/order/addRefund", async (req, res, next) => {
+  const db = req.app.db;
+  const parsedBodey = req.body;
+
+  try {
+    await db.orders.updateOne(
+      {
+        _id: getId(parsedBodey.orderId),
+      },
+      {
+        $push: {
+          refundData: parsedBodey.refundObj,
+        },
+      },
+      { multi: false }
+    );
+    res.status(200).json({msg:"refund added"});
+
+  } catch (err) {
+    res.status(400).json({ errorMessage: 'refund  failed' });
+  }
+})
+
 router.post("/api/order/updateCCPayment", async (req, res, next) => {
   const db = req.app.db;
   const parsedBodey = req.body;
@@ -377,6 +400,7 @@ router.post(
       status: isCreditCardPay ? "0" : "1",
       isPrinted: false,
       isViewd: false,
+      ipAddress: req.ip
     };
     try {
       const newDoc = await db.orders.insertOne(orderDoc);

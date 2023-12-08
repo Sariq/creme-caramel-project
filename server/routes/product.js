@@ -107,11 +107,9 @@ const addProductByImage = async (image, db) => {
 
   let req = {};
   req.body = {
-    nameAR: "كعكة ",
-    nameHE: "עוגות ",
-    categoryId: "5",
-    subCategoryId: "2",
-    cakeLevels: "2",
+    nameAR: "كعكة",
+    nameHE: "עוגות",
+    categoryId: "6",
     descriptionAR: "شرح",
     descriptionHE: "הסבר",
     mediumPrice: "180",
