@@ -40,4 +40,13 @@ router.post("/api/store/update", async (req, res, next) => {
   res.status(200).json({ message: "Successfully saved" });
 });
 
+router.get("/api/store/download-app", (req, res) => {
+  const userAgent = req.get('user-agent');
+  if (userAgent.includes('iPhone') || userAgent.includes('iPad')) {
+    res.redirect('itms-apps://itunes.apple.com/app/6446260267');
+  } else if (userAgent.includes('Android')) {
+    res.redirect('https://play.google.com/store/apps/details?id=com.sariq.creme.caramel');
+  }
+});
+
 module.exports = router;
