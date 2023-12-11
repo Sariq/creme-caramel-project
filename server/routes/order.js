@@ -316,7 +316,7 @@ router.post("/api/order/updateCCPayment", async (req, res, next) => {
 
             // res.status(200).json(response.data);
           });
-        }, 60000);
+        }, 120000);
       res.status(200).json({ errorMessage: "valid invoice doc" });
     } else {
       await db.orders.updateOne(
