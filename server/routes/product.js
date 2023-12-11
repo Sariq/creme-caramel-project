@@ -166,7 +166,7 @@ const addProductByImage = async (image, db) => {
   };
 
   if (
-    req.body.categoryId == "5" &&
+    (req.body.categoryId == "5" || req.body.categoryId == "6") &&
     req.body.subCategoryId != "1" &&
     req.body.cakeLevels
   ) {
@@ -291,7 +291,7 @@ router.post(
     };
 
     if (
-      req.body.categoryId == "5" &&
+      (req.body.categoryId == "5" || req.body.categoryId == "6") &&
       req.body.subCategoryId != "1" &&
       req.body.cakeLevels
     ) {
@@ -422,7 +422,7 @@ router.post(
     }
 
     if (
-      req.body.categoryId == "5" &&
+      (req.body.categoryId == "5" || req.body.categoryId == "6") &&
       req.body.subCategoryId != "1" &&
       req.body.cakeLevels
     ) {

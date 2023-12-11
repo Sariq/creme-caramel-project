@@ -87,42 +87,76 @@ pass,
 getOrderRecivedContent = function (customerName, totalAmount, shippingMethod, orderId, lang) {
     const orderIdSplit = orderId.split("-");
     const idPart2 = orderIdSplit[2];
-    return `היי ${customerName} \u{1F60A} \n ` 
-    + `ההזמנה התקבלה בהצלחה \n `
-    + ` - שיטת איסוף ${shippingMethod == "TAKEAWAY" ? "איסוף עצמי" : "משלוח"} \n `
-    + `מספר הזמנה ${idPart2} \n`
-    + `סה״כ ${totalAmount} `
+    if(lang == "0"){
+      return `مرحبا ${customerName} \u{1F60A} \n ` 
+      + `لقد تم استلام الطلبية بنجاح \u{2705} \n`
+      + `اخترت ${shippingMethod == "TAKEAWAY" ? "الاستلام من المحل \u{1F6CD}" : "خدمة التوصيل \u{1F6E9}"}. \n `
+      + `رقم الطلبية ${idPart2} \n`
+      + `مبلغ الطلبية: ${totalAmount}₪ \n`
+      + `شكرا على اختيارنا، صحتين وعافية \u{1F60B} \n`
+      + `Creme Caramel \n`
+    }else{
+      return `היי ${customerName} \u{1F60A} \n ` 
+      + `ההזמנה התקבלה בהצלחה \u{2705} \n`
+      + ` - שיטת איסוף ${shippingMethod == "TAKEAWAY" ? "איסוף עצמי \u{1F6CD}" : "משלוח \u{1F6E9}"} \n `
+      + `מספר הזמנה ${idPart2} \n`
+      + `תודה שבחרתם בנו, בתאבון \u{1F60B} \n`
+      + `מחיר לתשלום: ${totalAmount}₪ \n`
+      + `Creme Caramel \n`
+    }
 }
 
 getOrderTakeawayReadyContent = function (customerName, orderId, lang) {
   const orderIdSplit = orderId.split("-");
   const idPart2 = orderIdSplit[2];
-  return `היי ${customerName} \u{1F60A} \n ` 
-  + `ההזמנה מוכנה לאיסוף \n`
-  + `מספר הזמנה ${idPart2} \n`
+  if(lang == "0"){
+    return `مرحبا ${customerName} \u{1F60A} \n ` 
+    + `الطلبية جاهزة للاستلام \u{2705} \n`
+    + `رقم الطلبية ${idPart2} \n`
+    + `Creme Caramel \n`
+  }else{
+    return `היי ${customerName} \u{1F60A} \n ` 
+    + `ההזמנה מוכנה לאיסוף \u{2705} \n`
+    + `מספר הזמנה ${idPart2} \n`
+    + `Creme Caramel \n`
+  }
 }
 
 getOrderDeliveryReadyContent = function (customerName, orderId, lang) {
   const orderIdSplit = orderId.split("-");
   const idPart2 = orderIdSplit[2];
-  return `היי ${customerName} \u{1F60A} \n ` 
-  + `ההזמנה מוכנה, השליח בדרך אליך \n`
-  + `מספר הזמנה ${idPart2} \n`
+  if(lang == "0"){
+    return `مرحبا ${customerName} \u{1F60A} \n ` 
+    + `الطلبية بطريقها اليك \u{1F6EB} \n`
+    + `رقم الطلبية ${idPart2} \n`
+    + `Creme Caramel \n`
+  }else{
+    return `היי ${customerName} \u{1F60A} \n ` 
+    + `ההזמנה מוכנה, השליח בדרך אליך \u{1F6EB} \n`
+    + `מספר הזמנה ${idPart2} \n`
+    + `Creme Caramel \n`
+  }
+
 }
 
 getOrderDeliveryCompanyContent = function (customerName, orderId, lang,orderDate) {
   const orderIdSplit = orderId.split("-");
   const idPart2 = orderIdSplit[2];
-  return `היי \n ` 
-  + `ההזמנה מוכנה לאיסוף \n`
-  + `שעת מסיר: ${moment(orderDate).format('HH:mm')}\n`
-  + `מספר הזמנה ${idPart2} \n`
-  + `שם הלקוח ${customerName} \n`
+  return `مرحبا \n ` 
+  + `الطلبية جاهزة للاستلام\n`
+  + `ساعة الاستلام ${moment(orderDate).format('HH:mm')}\n`
+  + `رقم الطلبية ${idPart2} \n`
+  + `اسم الزبون ${customerName} \n`
+  + `Creme Caramel \n`
 }
 
 
-getVerifyCodeContent = function (verifyCode) {
+getVerifyCodeContent = function (verifyCode, lang) {
+  if(lang == "0"){
+    return `الكود الخاص بك هو: ${verifyCode}`;
+  }else{
     return `קוד האימות שלך הוא: ${verifyCode}`;
+  }
 }
 
 getSMSBalanceContent = function (credits) {

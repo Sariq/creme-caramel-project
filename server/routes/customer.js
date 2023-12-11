@@ -121,7 +121,7 @@ router.post("/api/customer/create", async (req, res) => {
       customer.phone !== "0536660444" &&
       customer.phone !== "1234567899"
     ) {
-      const smsContent = smsService.getVerifyCodeContent(random4DigitsCode);
+      const smsContent = smsService.getVerifyCodeContent(random4DigitsCode, req.body?.language);
       smsService.sendSMS(customer.phone, smsContent, req);
     }
     return;
@@ -140,7 +140,7 @@ router.post("/api/customer/create", async (req, res) => {
       customer.phone !== "0536660444" &&
       customer.phone !== "1234567899"
     ) {
-      const smsContent = smsService.getVerifyCodeContent(random4DigitsCode);
+      const smsContent = smsService.getVerifyCodeContent(random4DigitsCode, req.body?.language);
       smsService.sendSMS(customer.phone, smsContent, req);
     }
     indexCustomers(req.app).then(() => {
