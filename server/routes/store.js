@@ -40,11 +40,27 @@ router.post("/api/store/update", async (req, res, next) => {
   res.status(200).json({ message: "Successfully saved" });
 });
 
-router.get("/api/store/download-app", (req, res) => {
+router.get("/api/store/download-app", async (req, res) => {
+  const db = req.app.db;
+
   const userAgent = req.get('user-agent');
   if (userAgent.includes('iPhone') || userAgent.includes('iPad')) {
+    const data = {
+      source: 'default',
+      created: new Date(),
+      ipAddress: req.ip,
+      type: 'IOS'
+    };
+    await db.downloadAppQr.insertOne(data);
     res.redirect('itms-apps://itunes.apple.com/app/6446260267');
   } else if (userAgent.includes('Android')) {
+    const data = {
+      source: 'default',
+      created: new Date(),
+      ipAddress: req.ip,
+      type: 'ANDROID'
+    };
+    await db.downloadAppQr.insertOne(data);
     res.redirect('https://play.google.com/store/apps/details?id=com.sariq.creme.caramel');
   }
 });

@@ -43,6 +43,7 @@ function initDb(dbUrl, callback){ // eslint-disable-line
         db.store = db.collection('store');
         db.calander = db.collection('calander');
         db.clientError = db.collection('client-error');
+        db.downloadAppQr = db.collection('download-app-qr');
         db.translations = db.collection('translations');
         db.images = db.collection('images');
 

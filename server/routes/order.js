@@ -275,7 +275,7 @@ router.post("/api/order/updateCCPayment", async (req, res, next) => {
             orderDoc.orderId,
             orderDoc.app_language
           );
-          // //smsService.sendSMS(customer.phone, smsContent, req);
+          smsService.sendSMS(customer.phone, smsContent, req);
           smsService.sendSMS("0536660444", smsContent, req);
           smsService.sendSMS("0542454362", smsContent, req);
 
@@ -456,7 +456,7 @@ router.post(
           generatedOrderId,
           orderDoc.app_language
         );
-        //smsService.sendSMS(customer.phone, smsContent, req);
+        smsService.sendSMS(customer.phone, smsContent, req);
         smsService.sendSMS("0536660444", smsContent, req);
         smsService.sendSMS("0542454362", smsContent, req);
         websockets.fireWebscoketEvent("new order", finalOrderDoc);
@@ -619,7 +619,7 @@ router.post("/api/order/update", auth.required, async (req, res) => {
             order.app_language
           );
       }
-      // //smsService.sendSMS(customer.phone, smsContent, req);
+      msService.sendSMS(customer.phone, smsContent, req);
       smsService.sendSMS("0536660444", smsContent, req);
       smsService.sendSMS("0542454362", smsContent, req);
     }
@@ -692,8 +692,9 @@ router.post("/api/order/book-delivery", auth.required, async (req, res) => {
       order.app_language,
       order.orderDate
     );
-    smsService.sendSMS("0536660444", smsContent, req);
-    smsService.sendSMS("0542454362", smsContent, req);
+    const storeData = await db.store.findOne({ id: 1 });
+
+    smsService.sendSMS(storeData.order_company_number, smsContent, req);
     websockets.fireWebscoketEvent("order delivery booked");
     return res.status(200).json({ message: "order delivery booked successfully" });
 
