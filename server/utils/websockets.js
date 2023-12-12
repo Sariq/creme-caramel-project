@@ -16,7 +16,6 @@ cron.schedule("*/5 * * * *", function () {
       delete clients[userId];
     }
   }
-  console.log("axxx",clients)
 });
 
 initWebSockets = function (server) {
@@ -36,7 +35,6 @@ initWebSockets = function (server) {
   });
 };
 fireWebscoketEvent = function (type = 'general', data = {}, customersIds = null) {
-  console.log("clients", clients);
   const message = JSON.stringify({ type: type, data: data });
 
   if(customersIds){

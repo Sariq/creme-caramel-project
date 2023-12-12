@@ -98,7 +98,6 @@ router.post(
         });
       }
     }
-    console.log("finalOrders", finalOrders);
     // If API request, return json
     // if(req.apiAuthenticated){
     res.status(200).json({ordersList: finalOrders, totalItems: orders?.totalItems});
@@ -287,7 +286,6 @@ router.post("/api/order/updateCCPayment", async (req, res, next) => {
                 `https://creme-caramel-images.fra1.cdn.digitaloceanspaces.com/invoices/doc-${docId}.pdf`
               )
               .then(async (res) => {
-                console.log(res);
                 await db.orders.updateOne(
                   {
                     _id: getId(parsedBodey.orderId),
@@ -581,8 +579,6 @@ router.post("/api/order/update", auth.required, async (req, res) => {
   const db = req.app.db;
   try {
     const updateobj = req.body.updateData;
-    console.log("XXX", updateobj);
-
     await db.orders.updateOne(
       {
         _id: getId(req.body.orderId),
@@ -619,7 +615,7 @@ router.post("/api/order/update", auth.required, async (req, res) => {
             order.app_language
           );
       }
-      msService.sendSMS(customer.phone, smsContent, req);
+      smsService.sendSMS(customer.phone, smsContent, req);
       smsService.sendSMS("0536660444", smsContent, req);
       smsService.sendSMS("0542454362", smsContent, req);
     }
@@ -707,7 +703,6 @@ router.post("/api/order/book-delivery", auth.required, async (req, res) => {
 router.post("/api/order/printed", auth.required, async (req, res) => {
   const db = req.app.db;
   try {
-    console.log("PRINTED", req.body.orderId);
     await db.orders.updateOne(
       {
         _id: getId(

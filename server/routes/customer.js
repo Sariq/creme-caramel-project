@@ -63,7 +63,6 @@ router.post("/api/customer/validateAuthCode", async (req, res) => {
           },
           { multi: false, returnOriginal: false }
         );
-        console.log("Customer updated", updatedCustomer.value);
 
         indexCustomers(req.app).then(() => {
           res

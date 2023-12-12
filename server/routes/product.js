@@ -42,7 +42,6 @@ const uploadFile = async (files, req, folderName) => {
       },
     });
     files = files.filter((file) => file.originalname !== "existingImage");
-    console.log("X3");
     if (files.length > 0) {
       for (const file of files) {
         const fileName = `${new Date().getTime()}` + file.originalname;
@@ -55,15 +54,12 @@ const uploadFile = async (files, req, folderName) => {
         };
 
         try {
-          console.log("X4");
 
           const data = await s3Client.send(new PutObjectCommand(params));
           locationslist.push({ uri: params.Key });
           counter++;
-          console.log("X5");
 
           if (counter === files.length) {
-            console.log("X6");
             resolve(locationslist);
           }
         } catch (err) {
@@ -546,7 +542,6 @@ router.post("/api/admin/product/delete", async (req, res) => {
 router.post("/api/images", async (req, res, next) => {
   const db = req.app.db;
 
-  console.log("req.body.type", req.body.type);
   try {
     const results = await db.images.find({ type: req.body.type }).toArray();
     res.status(200).json(results);

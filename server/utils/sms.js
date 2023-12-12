@@ -25,8 +25,6 @@ sendSMS = async function ( phoneNumber, smsContent, req, db = null) {
     recipient: phoneNumber,
     msg: smsContent
     }
-    console.log("sender", sender)
-    console.log("smsSender", requestObject.sender)
     return axios.post(apiPath, requestObject, { 
         headers: {
           "Content-Type": 'application/json',

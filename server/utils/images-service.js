@@ -35,15 +35,10 @@ const uploadImage = async (files, req, folderName) => {
         };
 
         try {
-          console.log("X4");
-
           const data = await s3Client.send(new PutObjectCommand(params));
           locationslist.push({ uri: params.Key });
           counter++;
-          console.log("X5");
-
           if (counter === files.length) {
-            console.log("X6");
             resolve(locationslist);
           }
         } catch (err) {
