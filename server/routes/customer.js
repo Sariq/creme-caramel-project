@@ -129,18 +129,18 @@ router.post("/api/customer/create", async (req, res) => {
   try {
     await db.customers.insertOne(customerObj);
     if (
-      // customer.phone !== "0542454362" &&
-      customer.phone !== "0528602121" &&
-      customer.phone !== "1234567891" &&
-      customer.phone !== "1234567892" &&
-      customer.phone !== "1234567893" &&
-      customer.phone !== "1234567894" &&
-      customer.phone !== "1234567895" &&
-   //   customer.phone !== "0536660444" &&
-      customer.phone !== "1234567899"
+      // customerObj.phone !== "0542454362" &&
+      customerObj.phone !== "0528602121" &&
+      customerObj.phone !== "1234567891" &&
+      customerObj.phone !== "1234567892" &&
+      customerObj.phone !== "1234567893" &&
+      customerObj.phone !== "1234567894" &&
+      customerObj.phone !== "1234567895" &&
+   //   customerObj.phone !== "0536660444" &&
+   customerObj.phone !== "1234567899"
     ) {
       const smsContent = smsService.getVerifyCodeContent(random4DigitsCode, req.body?.language);
-      await smsService.sendSMS(customer.phone, smsContent, req);
+      await smsService.sendSMS(customerObj.phone, smsContent, req);
     }
     res.status(200).json(customerObj);
   } catch (ex) {
