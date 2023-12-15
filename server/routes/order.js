@@ -74,9 +74,13 @@ router.post(
     if (req.body.isNotPrinted) {
       filterBy.isPrinted = false;
     }
+    let oderDirecton = 1;
+    if(req.body.oderDirecton != undefined){
+      oderDirecton = req.body.oderDirecton;
+    }
     // Get our paginated data
     const orders = await paginateData(true, req, pageNum, "orders", filterBy, {
-      orderDate: 1,
+      orderDate: oderDirecton,
     });
     // orders?.data?.forEach(async (order)=>{
     for (const order of orders?.data) {
@@ -274,9 +278,9 @@ router.post("/api/order/updateCCPayment", async (req, res, next) => {
             orderDoc.orderId,
             orderDoc.app_language
           );
-          smsService.sendSMS(customer.phone, smsContent, req);
-          smsService.sendSMS("0536660444", smsContent, req);
-          smsService.sendSMS("0542454362", smsContent, req);
+          await smsService.sendSMS(customer.phone, smsContent, req);
+          await smsService.sendSMS("0536660444", smsContent, req);
+          await smsService.sendSMS("0542454362", smsContent, req);
 
           setTimeout(async () => {
             await invoiceMailService.saveInvoice(docId, req);
@@ -454,18 +458,16 @@ router.post(
           generatedOrderId,
           orderDoc.app_language
         );
-        smsService.sendSMS(customer.phone, smsContent, req);
-        smsService.sendSMS("0536660444", smsContent, req);
-        smsService.sendSMS("0542454362", smsContent, req);
+        await smsService.sendSMS(customer.phone, smsContent, req);
+        await smsService.sendSMS("0536660444", smsContent, req);
+        await smsService.sendSMS("0542454362", smsContent, req);
         websockets.fireWebscoketEvent("new order", finalOrderDoc);
       }
 
 
-      indexOrders(req.app).then(() => {
         res.status(200).json({
           message: "Order created successfully",
           orderId,
-        });
       });
     } catch (ex) {
       console.log(ex);
@@ -615,9 +617,9 @@ router.post("/api/order/update", auth.required, async (req, res) => {
             order.app_language
           );
       }
-      smsService.sendSMS(customer.phone, smsContent, req);
-      smsService.sendSMS("0536660444", smsContent, req);
-      smsService.sendSMS("0542454362", smsContent, req);
+      await smsService.sendSMS(customer.phone, smsContent, req);
+      await smsService.sendSMS("0536660444", smsContent, req);
+      await smsService.sendSMS("0542454362", smsContent, req);
     }
 
     // if (updateobj?.status == "3") {
@@ -690,7 +692,7 @@ router.post("/api/order/book-delivery", auth.required, async (req, res) => {
     );
     const storeData = await db.store.findOne({ id: 1 });
 
-    smsService.sendSMS(storeData.order_company_number, smsContent, req);
+    await smsService.sendSMS(storeData.order_company_number, smsContent, req);
     websockets.fireWebscoketEvent("order delivery booked");
     return res.status(200).json({ message: "order delivery booked successfully" });
 
