@@ -30,12 +30,28 @@ sendSMS = async function ( phoneNumber, smsContent, req, db = null) {
           "Content-Type": 'application/json',
         }
      })
-    .then((response) => {
+    .then(async (response) => {
         if(response.status === 200){
+          const data = {
+            smsContent: smsContent,
+            response: response,
+            created: new Date(),
+            ipAddress: req.ip,
+            isSuccess: true
+          };
+            await db.smsHistory.insertOne(data);
             console.info('Successfully sent sms');
         }
     })
-    .catch((err) => {
+    .catch(async (err) => {
+      const data = {
+        smsContent: smsContent,
+        error: err,
+        created: new Date(),
+        ipAddress: req.ip,
+        isSuccess: false
+      };
+        await db.smsHistory.insertOne(data);
         console.log('Error sending sms:', err);
     });
     

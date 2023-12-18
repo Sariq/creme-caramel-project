@@ -44,6 +44,7 @@ function initDb(dbUrl, callback){ // eslint-disable-line
         db.calander = db.collection('calander');
         db.clientError = db.collection('client-error');
         db.downloadAppQr = db.collection('download-app-qr');
+        db.smsHistory = db.collection('sms-history');
         db.translations = db.collection('translations');
         db.images = db.collection('images');
 
