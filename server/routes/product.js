@@ -248,6 +248,7 @@ router.post(
       // mediumCount: Number(req.body.mediumCount),
       // largeCount: Number(req.body.largeCount),
       isInStore: req.body.isInStore === "false" ? false : true,
+      isToNameAndAge: req.body.isToNameAndAge === "false" ? false : true,
       isUploadImage: req.body.isUploadImage === "false" ? false : true,
       createdAt: new Date(),
     };
