@@ -35,24 +35,38 @@ sendSMS = async function ( phoneNumber, smsContent, req, db = null) {
           const data = {
             smsContent: smsContent,
             response: response,
+            phoneNumber: phoneNumber,
             created: new Date(),
             ipAddress: req.ip,
             isSuccess: true
           };
+        if(req){
+            await req.app.db.smsHistory.insertOne(data);
+         }else{
+          if(db){
             await db.smsHistory.insertOne(data);
-            console.info('Successfully sent sms');
+          }
+         }
+        console.info('Successfully sent sms');
         }
     })
     .catch(async (err) => {
       const data = {
         smsContent: smsContent,
         error: err,
+        phoneNumber: phoneNumber,
         created: new Date(),
         ipAddress: req.ip,
         isSuccess: false
       };
-        await db.smsHistory.insertOne(data);
-        console.log('Error sending sms:', err);
+      if(req){
+        await req.app.db.smsHistory.insertOne(data);
+      }else{
+        if(db){
+          await db.smsHistory.insertOne(data);
+        }
+      }
+     console.log('Error sending sms:', err);
     });
     
 };
