@@ -600,7 +600,7 @@ router.post("/api/order/update", auth.required, async (req, res) => {
       });
       return;
     }
-    if (updateobj?.status == "2") {
+    if (updateobj?.status == "2" && updateobj?.shouldSendSms) {
       let smsContent = "";
       switch (order.order.receipt_method) {
         case "TAKEAWAY":
@@ -711,9 +711,12 @@ router.post("/api/order/printed", auth.required, async (req, res) => {
           req.body?.orderId?.$oid ? req.body.orderId.$oid : req.body.orderId
         ),
       },
-      { $set: { isPrinted: true } },
+      { $set: { isPrinted: req.body.status } },
       { multi: false }
     );
+    if(req.body.status === false){
+      websockets.fireWebscoketEvent("print not printed");
+    }
     return res.status(200).json({ message: "Order successfully printed" });
   } catch (ex) {
     console.info("Error updating order", ex);
