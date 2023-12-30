@@ -331,7 +331,7 @@ router.post("/api/order/updateCCPayment", async (req, res, next) => {
               payload: parsedBodey,
               data: 'no doc ID',
             },
-            status: "1",
+            status: "0",
           },
         },
         { multi: false }
