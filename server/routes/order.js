@@ -165,6 +165,18 @@ async (req, res, next) => {
   res.status(200).json(orders);
 });
 
+router.get("/api/order/customer-orders",  auth.required,
+async (req, res, next) => {
+  const db = req.app.db;
+  const customerId = req.auth.id;
+  const orders = await db.orders
+    .find({
+      customerId: customerId,
+    })
+    .toArray();
+  res.status(200).json(orders);
+});
+
 router.post("/api/order/byDate", async (req, res, next) => {
   const db = req.app.db;
   let finalOrders = [];
