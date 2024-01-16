@@ -172,7 +172,7 @@ getOrderDeliveryCompanyContent = function (customerName, orderId, lang,orderDate
   const idPart2 = orderIdSplit[2];
   return `مرحبا \n ` 
   + `الطلبية جاهزة للاستلام\n`
-  + `ساعة الاستلام ${moment(orderDate).format('HH:mm')}\n`
+  + `ساعة الاستلام ${moment(orderDate).utcOffset(120).format('HH:mm')}\n`
   + `رقم الطلبية ${idPart2} \n`
   + `اسم الزبون ${customerName} \n`
   + `Creme Caramel \n`
