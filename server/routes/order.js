@@ -575,7 +575,7 @@ router.post(
           phone: customer.phone,
         },
       };
-      websockets.fireWebscoketEvent("new order", finalOrderDoc);
+      websockets.fireWebscoketEvent("order updated", finalOrderDoc);
 
       indexOrders(req.app).then(() => {
         res.status(200).json({

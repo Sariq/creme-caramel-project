@@ -569,4 +569,18 @@ router.post("/api/admin/product/update/isInStore", async (req, res) => {
   }
 });
 
+router.post("/api/admin/product/update/isInStore/byCategory", async (req, res) => {
+  const db = req.app.db;
+  try {
+    await db.products.updateMany(
+      {categoryId: req.body.categoryId?.toString(), subCategoryId: req.body.subCategoryId?.toString()},
+      { $set: {isInStore: req.body.isInStore}}
+    );
+    res.status(200).json({ message: "isInStore state updated byCategory" });
+  } catch (ex) {
+    console.error(colors.red(`Failed to update the isInStore state: ${ex} byCategory`));
+    res.status(400).json({ message: "isInStore state not updated byCategory" });
+  }
+});
+
 module.exports = router;
