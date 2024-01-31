@@ -479,6 +479,7 @@ router.post(
       { $set: { activeTastes: req.body.activeTastes } },
       { multi: false }
     );
+    websockets.fireWebscoketEvent('update active tastes');
     res.status(200).json({ message: "Product successfully updated" });
   }
 );
