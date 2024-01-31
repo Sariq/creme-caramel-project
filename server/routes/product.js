@@ -562,6 +562,7 @@ router.post("/api/admin/product/update/isInStore", async (req, res) => {
       { $set: { isInStore: req.body.isInStore } },
       { multi: false }
     );
+    websockets.fireWebscoketEvent('product updated');
     res.status(200).json({ message: "isInStore state updated" });
   } catch (ex) {
     console.error(colors.red(`Failed to update the isInStore state: ${ex}`));
@@ -576,6 +577,7 @@ router.post("/api/admin/product/update/isInStore/byCategory", async (req, res) =
       {categoryId: req.body.categoryId?.toString(), subCategoryId: req.body.subCategoryId?.toString()},
       { $set: {isInStore: req.body.isInStore}}
     );
+    websockets.fireWebscoketEvent('product updated');
     res.status(200).json({ message: "isInStore state updated byCategory" });
   } catch (ex) {
     console.error(colors.red(`Failed to update the isInStore state: ${ex} byCategory`));
