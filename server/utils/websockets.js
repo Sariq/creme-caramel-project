@@ -6,16 +6,18 @@ let clients = {};
 
 let webSocketsList = [];
 
-cron.schedule("*/5 * * * *", function () {
+cron.schedule("0 4 * * *", function () {
   console.log("---------------------");
-  console.log("running a task every 15 seconds");
+  console.log("running a task At 04:00");
   //clients = {};
+  console.log("clients", clients)
   for (let userId in clients) {
     let client = clients[userId];
     if(client.readyState != 1){
       delete clients[userId];
     }
   }
+  console.log("clients after delete", clients)
 });
 
 initWebSockets = function (server) {
