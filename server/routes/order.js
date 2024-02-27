@@ -445,8 +445,8 @@ router.post(
         });
 
         let updatedProduct = {};
-        product.extras.size.options[item.size].count =
-          product.extras.size.options[item.size].count - item.qty;
+        const currentCount = product.extras.size.options[item.size].count - item.qty;
+        product.extras.size.options[item.size].count = currentCount <= 0 ? 0 : currentCount;
         updatedProduct = { ...product };
         await db.products.updateOne(
           { _id: getId(item.item_id) },

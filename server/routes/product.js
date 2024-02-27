@@ -404,7 +404,7 @@ router.post(
           },
         },
         type: "oneChoice",
-        value: req.body.mediumCount > 0 ? "medium" : "large",
+        value: productDoc?.extras?.size?.value ?? "medium",
       },
     };
 
