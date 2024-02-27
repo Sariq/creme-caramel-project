@@ -331,14 +331,7 @@ router.post("/api/customer/delete", auth.required, async (req, res) => {
   const {
     auth: { id },
   } = req;
-  await db.customers.findOneAndUpdate(
-    { _id: getId(id) },
-    {
-      $set: { isBlocked: true },
-    },
-    { multi: false, returnOriginal: false }
-  );
-
+  await db.customers.deleteOne({ _id: getId(id) });
   res.status(200).json({ data: "blocked success" });
 });
 
