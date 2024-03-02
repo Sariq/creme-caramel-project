@@ -151,6 +151,35 @@ router.get("/api/order/admin/not-viewd", async (req, res, next) => {
   res.status(200).json(finalOrders);
 });
 
+router.get("/api/order/admin/all/not-viewd", async (req, res, next) => {
+  const db = req.app.db;
+
+  const orders = await db.orders
+    .find({
+      isViewdAdminAll: false,
+      status: "1",
+    })
+    .toArray();
+    const finalOrders =[];
+    for (const order of orders) {
+      const customer = await db.customers.findOne({
+        _id: getId(order.customerId),
+      });
+      if (customer) {
+
+        finalOrders.push({
+          ...order,
+          customerDetails: {
+            name: customer.fullName,
+            phone: customer.phone,
+          },
+        });
+      }
+    }
+
+  res.status(200).json(finalOrders);
+});
+
 router.get("/api/order/customer-invoices",  auth.required,
 async (req, res, next) => {
   const db = req.app.db;
@@ -414,6 +443,7 @@ router.post(
       status: isCreditCardPay ? "0" : "1",
       isPrinted: false,
       isViewd: false,
+      isViewdAdminAll: false,
       ipAddress: req.ip
     };
     try {
