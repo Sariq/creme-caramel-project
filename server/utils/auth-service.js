@@ -6,7 +6,7 @@ generateJWT = async function (user,req) {
         const db = req.app.db;
         const today = new Date();
         const expirationDate = new Date(today);
-        expirationDate.setDate(today.getDate() + 60);
+        expirationDate.setDate(today.getDate() + (30 * 12));
 
         const token = jwt.sign({
             phone: user.phone,

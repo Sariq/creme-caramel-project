@@ -13,6 +13,7 @@ const getTokenFromHeaders = async (req, res) => {
     decoded = jwt.verify(token, "secret");
   } catch (e) {
     console.log("E", e);
+    return null;
   }
   const cutomerId = decoded.id;
   // check for existing customer

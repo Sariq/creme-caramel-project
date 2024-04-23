@@ -730,7 +730,8 @@ router.post("/api/order/book-delivery", auth.required, async (req, res) => {
       customer.fullName,
       order.orderId,
       order.app_language,
-      order.orderDate
+      order.orderDate,
+      customer.phone,
     );
     const storeData = await db.store.findOne({ id: 1 });
 

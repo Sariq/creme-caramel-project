@@ -167,7 +167,7 @@ getOrderDeliveryReadyContent = function (customerName, orderId, lang) {
 
 }
 
-getOrderDeliveryCompanyContent = function (customerName, orderId, lang,orderDate) {
+getOrderDeliveryCompanyContent = function (customerName, orderId, lang,orderDate, phone) {
   const orderIdSplit = orderId.split("-");
   const idPart2 = orderIdSplit[2];
   return `مرحبا \n ` 
@@ -175,6 +175,7 @@ getOrderDeliveryCompanyContent = function (customerName, orderId, lang,orderDate
   + `ساعة الاستلام ${moment(orderDate).utcOffset(120).format('HH:mm')}\n`
   + `رقم الطلبية ${idPart2} \n`
   + `اسم الزبون ${customerName} \n`
+  + `هاتف الزبون ${phone} \n`
   + `Creme Caramel \n`
 }
 
