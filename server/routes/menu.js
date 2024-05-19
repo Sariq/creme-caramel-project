@@ -38,7 +38,9 @@ router.get("/api/menu", async (req, res, next) => {
           productsImagesList.push(`https://creme-caramel-images.fra1.cdn.digitaloceanspaces.com/${product.img[0].uri}`)
         }
       });
-      const menu = categories.data.map((category)=>{
+      const orderedCategories =  _.orderBy(categories.data, 'order');
+      const finalCategories = orderedCategories.filter((category)=> !category.isHidden)
+      const menu = finalCategories.map((category)=>{
           const tempCat = {
               ...category,
               products: products.data.filter((product)=> product.categoryId == category.categoryId)
