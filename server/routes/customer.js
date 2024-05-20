@@ -274,7 +274,7 @@ router.get("/api/customer/details", auth.required, async (req, res) => {
 
   if (match) {
     const version = match[1];
-    const isValidVersion = compareVersions(version, '1.0.14');
+    const isValidVersion = compareVersions(version, '1.0.15');
     if(!isValidVersion){
       return res.status(402).json({ message: "invalid app version" });
     }
