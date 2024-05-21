@@ -269,6 +269,7 @@ router.post("/api/customer/orders", auth.required, async (req, res) => {
 
 router.get("/api/customer/details", auth.required, async (req, res) => {
   const userAgentString = req.headers['user-agent'];
+  console.log("====USER AGENT STRING====",userAgentString);
   const regex = /CremeCaramel\/([\d.]+)/;
   const match = userAgentString.match(regex);
 
