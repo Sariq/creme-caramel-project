@@ -268,21 +268,21 @@ router.post("/api/customer/orders", auth.required, async (req, res) => {
 });
 
 router.get("/api/customer/details", auth.required, async (req, res) => {
-  const userAgentString = req.headers['user-agent'];
-  console.log("====USER AGENT STRING====",userAgentString);
-  console.log("====H E A D E R S====",req.headers);
-  const regex = /CremeCaramel\/([\d.]+)/;
-  const match = userAgentString.match(regex);
+  // const userAgentString = req.headers['user-agent'];
+  // console.log("====USER AGENT STRING====",userAgentString);
+  // console.log("====H E A D E R S====",req.headers);
+  // const regex = /CremeCaramel\/([\d.]+)/;
+  // const match = userAgentString.match(regex);
 
-  if (match) {
-    const version = match[1];
-    const isValidVersion = compareVersions(version, '1.0.15');
-    if(!isValidVersion){
-      return res.status(402).json({ message: "invalid app version" });
-    }
-  } else {
-    console.log('User agent string not found or in unexpected format.');
-  }
+  // if (match) {
+  //   const version = match[1];
+  //   const isValidVersion = compareVersions(version, '1.0.15');
+  //   if(!isValidVersion){
+  //     return res.status(402).json({ message: "invalid app version" });
+  //   }
+  // } else {
+  //   console.log('User agent string not found or in unexpected format.');
+  // }
   const customerId = req.auth.id;
   const db = req.app.db;
   try {

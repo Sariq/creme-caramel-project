@@ -44,6 +44,7 @@ router.get("/api/store/download-app", async (req, res) => {
   const db = req.app.db;
 
   const userAgent = req.get('user-agent');
+  console.log("====Download app====", userAgent);
   if (userAgent.includes('iPhone') || userAgent.includes('iPad')) {
     const data = {
       source: 'default',
