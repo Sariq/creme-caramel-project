@@ -14,7 +14,6 @@ const {
   sanitize,
 } = require("../lib/common");
 const rateLimit = require("express-rate-limit");
-const { indexCustomers } = require("../lib/indexing");
 const { validateJson } = require("../lib/schema");
 const { restrict } = require("../lib/auth");
 
@@ -85,11 +84,9 @@ router.post("/api/customer/validateAuthCode", async (req, res) => {
           { multi: false, returnOriginal: false }
         );
 
-        indexCustomers(req.app).then(() => {
           res
             .status(200)
             .json({ message: "Customer updated", data: updatedCustomer.value });
-        });
       });
     } catch (ex) {
       console.error(colors.red(`Failed updating customer: ${ex}`));
@@ -202,7 +199,7 @@ router.post("/api/customer/admin-create", async (req, res) => {
   }
   // email is ok to be used.
   try {
-    indexCustomers(req.app).then(async () => {
+
       const newCustomer = await db.customers.insertOne(customerObj);
       const customerInsertedId = newCustomer.insertedId;
       const customer = await db.customers.findOne({
@@ -216,7 +213,6 @@ router.post("/api/customer/admin-create", async (req, res) => {
           isAdmin: customer.isAdmin,
           customerId: customer._id,
         });
-    });
   } catch (ex) {
     console.error(colors.red("Failed to insert customer: ", ex));
     res.status(400).json({
@@ -268,21 +264,6 @@ router.post("/api/customer/orders", auth.required, async (req, res) => {
 });
 
 router.get("/api/customer/details", auth.required, async (req, res) => {
-  const userAgentString = req.headers['user-agent'];
-  console.log("====USER AGENT STRING====",userAgentString);
-  console.log("====H E A D E R S====",req.headers);
-  const regex = /CremeCaramel\/([\d.]+)/;
-  const match = userAgentString.match(regex);
-
-  if (match) {
-    const version = match[1];
-    const isValidVersion = compareVersions(version, '1.0.15');
-    if(!isValidVersion){
-      return res.status(402).json({ message: "invalid app version" });
-    }
-  } else {
-    console.log('User agent string not found or in unexpected format.');
-  }
   const customerId = req.auth.id;
   const db = req.app.db;
   try {

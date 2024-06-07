@@ -217,24 +217,24 @@ cron.schedule("0 0 * * *", function () {
   });
 
   // Create indexes on startup
-  if (process.env.NODE_ENV !== "test") {
-    try {
-      await runIndexing(app);
-    } catch (ex) {
-      console.error(colors.red(`Error setting up indexes: ${ex.message}`));
-    }
-  }
+  // if (process.env.NODE_ENV !== "test") {
+  //   try {
+  //     await runIndexing(app);
+  //   } catch (ex) {
+  //     console.error(colors.red(`Error setting up indexes: ${ex.message}`));
+  //   }
+  // }
 
-  // Start cron job to index
-  if (process.env.NODE_ENV !== "test") {
-    cron.schedule("*/30 * * * *", async () => {
-      try {
-        await runIndexing(app);
-      } catch (ex) {
-        console.error(colors.red(`Error setting up indexes: ${ex.message}`));
-      }
-    });
-  }
+  // // Start cron job to index
+  // if (process.env.NODE_ENV !== "test") {
+  //   cron.schedule("*/30 * * * *", async () => {
+  //     try {
+  //       await runIndexing(app);
+  //     } catch (ex) {
+  //       console.error(colors.red(`Error setting up indexes: ${ex.message}`));
+  //     }
+  //   });
+  // }
 
   // Set trackStock for testing
   if (process.env.NODE_ENV === "test") {

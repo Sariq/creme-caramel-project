@@ -5,6 +5,23 @@ const { getId } = require("../lib/common");
 const { paginateData } = require("../lib/paginate");
 const websockets = require("../utils/websockets");
 
+function compareVersions(version1, version2) {
+  const v1Components = version1.split('.').map(Number);
+  const v2Components = version2.split('.').map(Number);
+
+  for (let i = 0; i < Math.max(v1Components.length, v2Components.length); i++) {
+      const v1Part = v1Components[i] || 0;
+      const v2Part = v2Components[i] || 0;
+
+      if (v1Part > v2Part) {
+        return true;  
+      } else if (v1Part < v2Part) {
+        return false;  
+      }
+  }
+  return true;  
+}
+
 router.post("/api/store", async (req, res, next) => {
   let pageNum = 1;
   if (req.params.page) {
@@ -65,5 +82,18 @@ router.get("/api/store/download-app", async (req, res) => {
     res.redirect('https://play.google.com/store/apps/details?id=com.sariq.creme.caramel');
   }
 });
+
+router.get("/api/store/is-should-update", async (req, res) => {
+  const version = req.headers['app-version'];
+  const isValidVersion = compareVersions(version, '1.0.17');
+if(!isValidVersion){
+   res.status(200).json(true);
+
+}else{
+  res.status(200).json(false);
+}
+
+});
+
 
 module.exports = router;
