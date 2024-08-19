@@ -22,27 +22,6 @@ const apiLimiter = rateLimit({
   max: 5,
 });
 
-function compareVersions(version1, version2) {
-  const v1Components = version1.split('.').map(Number);
-  const v2Components = version2.split('.').map(Number);
-
-  for (let i = 0; i < Math.max(v1Components.length, v2Components.length); i++) {
-      const v1Part = v1Components[i] || 0;
-      const v2Part = v2Components[i] || 0;
-
-      if (v1Part > v2Part) {
-        return true;  
-        // return `${version1} is greater than ${version2}`;
-      } else if (v1Part < v2Part) {
-        return false;  
-
-          //return `${version1} is less than ${version2}`;
-      }
-  }
-  return true;  
-  //return `${version1} is equal to ${version2}`;
-}
-
 router.post("/api/customer/validateAuthCode", async (req, res) => {
   const db = req.app.db;
   const customerObj = {

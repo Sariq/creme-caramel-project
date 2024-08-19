@@ -56,6 +56,8 @@ router.post(
     let filterBy = {
       status: { $in: statusList },
     };
+
+    let statusCount = [];
     if (ordersDate) {
       var start = moment(ordersDate).utcOffset(120);
       start.set({ hour: 0, minute: 0, second: 0, millisecond: 0 });
@@ -70,6 +72,23 @@ router.post(
         ...filterBy,
         orderDate: { $gte: start.format(), $lt: end.format() },
       };
+
+      statusCount =  await db.orders.aggregate([
+        {
+          $match: {
+            orderDate: {
+              $gte: start.format(), $lt: end.format() 
+            },
+            isViewd: true
+          }
+        },
+          {
+            $group: {
+              _id: "$status",
+              count: { $sum: 1 }
+            }
+          }
+        ]).toArray();
     }
     if (req.body.isNotPrinted) {
       filterBy.isPrinted = false;
@@ -104,7 +123,7 @@ router.post(
     }
     // If API request, return json
     // if(req.apiAuthenticated){
-    res.status(200).json({ordersList: finalOrders, totalItems: orders?.totalItems});
+    res.status(200).json({ordersList: finalOrders, totalItems: orders?.totalItems, statusCount});
     // }
   }
 );
