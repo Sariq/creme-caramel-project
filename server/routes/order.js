@@ -833,4 +833,27 @@ router.post("/api/order/statistics/new-orders/:page?", async (req, res) => {
   }
 });
 
+router.get("/api/order/admin/custom-cakes-orders", auth.required, async (req, res) => {
+  const db = req.app.db;
+  try {
+    var start = moment().utcOffset(120);
+    start.set({ hour: 0, minute: 0, second: 0, millisecond: 0 });
+  
+    const orders = await db.orders.find({
+      "order.items": {
+          $elemMatch: { item_id: "64f8f51d788b957346440acf" }
+      },
+      orderDate:  { $gte: start.format() },
+      status:"1",
+      isCustomViewed: undefined
+  }).toArray();
+
+  res.status(200).json(orders);
+
+  } catch (ex) {
+    console.info("Error custom-cakes-orders", ex);
+    return res.status(400).json({ message: "custom-cakes-orders error" });
+  }
+});
+
 module.exports = router;
