@@ -848,7 +848,22 @@ router.get("/api/order/admin/custom-cakes-orders", auth.required, async (req, re
       isCustomViewed: undefined
   }).toArray();
 
-  res.status(200).json(orders);
+  let finalOrders = [];
+  for (const order of orders) {
+    const customer = await db.customers.findOne({
+      _id: getId(order.customerId),
+    });
+    if (customer) {
+      finalOrders.push({
+        ...order,
+        customerDetails: {
+          name: customer.fullName,
+          phone: customer.phone,
+        },
+      });
+    }
+  }
+  res.status(200).json(finalOrders);
 
   } catch (ex) {
     console.info("Error custom-cakes-orders", ex);
