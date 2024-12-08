@@ -58,6 +58,7 @@ router.post(
     };
 
     let statusCount = [];
+    let isActiveDeliverySMSNotSend = false;
     if (ordersDate) {
       var start = moment(ordersDate).utcOffset(120);
       start.set({ hour: 0, minute: 0, second: 0, millisecond: 0 });
@@ -89,6 +90,18 @@ router.post(
             }
           }
         ]).toArray();
+
+        isActiveDeliverySMSNotSend = await db.orders.findOne({
+          orderDate: {
+            $gte: start.format(), $lt: end.format() 
+          },
+          "order.receipt_method": "DELIVERY",
+          isViewd: true,
+          $or: [
+            { isDeliverySent: { $exists: false } },
+            { isDeliverySent: false }
+          ]
+        });
     }
     if (req.body.isNotPrinted) {
       filterBy.isPrinted = false;
@@ -123,7 +136,7 @@ router.post(
     }
     // If API request, return json
     // if(req.apiAuthenticated){
-    res.status(200).json({ordersList: finalOrders, totalItems: orders?.totalItems, statusCount});
+    res.status(200).json({ordersList: finalOrders, totalItems: orders?.totalItems, statusCount, isActiveDeliverySMSNotSend});
     // }
   }
 );
