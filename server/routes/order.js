@@ -363,18 +363,22 @@ router.post("/api/order/updateCCPayment", async (req, res, next) => {
                 `https://creme-caramel-images.fra1.cdn.digitaloceanspaces.com/invoices/doc-${docId}.pdf`
               )
               .then(async (res) => {
+                let updateData = {
+                  ccPaymentRefData: {
+                    payload: parsedBodey,
+                    data: response.data,
+                    url: res,
+                  },
+                };
+                if(orderDoc.order.receipt_method === 'DELIVERY'){
+                  updateData.isShippingPaid = true;
+                }
                 await db.orders.updateOne(
                   {
                     _id: getId(parsedBodey.orderId),
                   },
                   {
-                    $set: {
-                      ccPaymentRefData: {
-                        payload: parsedBodey,
-                        data: response.data,
-                        url: res,
-                      },
-                    },
+                    $set: updateData
                   },
                   { multi: false }
                 );

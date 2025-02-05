@@ -3,6 +3,7 @@ const yenv = require("yenv");
 if (fs.existsSync("./env.yaml")) {
   process.env = yenv("env.yaml", { strict: false });
 }
+require('dotenv').config({ path: `.env.${process.env.NODE_ENV}` })
 
 const path = require("path");
 const express = require("express");
@@ -177,7 +178,7 @@ app.on("uncaughtException", (err) => {
 
 console.log("config.databaseConnectionString", config.databaseConnectionString);
 
-initDb(config.databaseConnectionString, async (err, db) => {
+initDb(process.env.DB_CONNECTION_STRING, async (err, db) => {
   // On connection error we display then exit
   if (err) {
     console.log(colors.red(`Error connecting to MongoDB: ${err}`));
