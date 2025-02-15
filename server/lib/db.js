@@ -16,7 +16,7 @@ function initDb(dbUrl, callback){ // eslint-disable-line
         }
 
         // Set the DB url
-        dbUrl = getDbUri(`${dbUrl}/expresscart`);
+        dbUrl = getDbUri(dbUrl);
 
         // select DB
         const dbUriObj = mongodbUri.parse(dbUrl);
