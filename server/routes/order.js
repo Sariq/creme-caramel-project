@@ -314,18 +314,22 @@ router.post("/api/order/updateCCPayment", async (req, res, next) => {
           { responseType: "application/json" }
         )
         .then(async (response) => {
+          let updateData = {
+            ccPaymentRefData: {
+              payload: parsedBodey,
+              data: response.data,
+            },
+            status: "1",
+          };
+          if(orderDoc.order.receipt_method === 'DELIVERY'){
+            updateData.isShippingPaid = true;
+          }
           await db.orders.updateOne(
             {
               _id: getId(parsedBodey.orderId),
             },
             {
-              $set: {
-                ccPaymentRefData: {
-                  payload: parsedBodey,
-                  data: response.data,
-                },
-                status: "1",
-              },
+              $set: updateData,
             },
             { multi: false }
           );
