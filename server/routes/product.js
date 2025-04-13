@@ -353,6 +353,7 @@ router.post(
       return;
     }
     let productDoc = {
+      ...product,
       nameAR: req.body.nameAR,
       nameHE: req.body.nameHE,
       categoryId: req.body.categoryId,
