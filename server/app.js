@@ -20,6 +20,7 @@ const cron = require("node-cron");
 const crypto = require("crypto");
 const websockets = require("./utils/websockets");
 const smsService = require("./utils/sms");
+const cronOrdersService = require("./utils/crons/orders");
 
 const {
   getConfig,
@@ -195,6 +196,10 @@ cron.schedule("0 0 * * *", function () {
   console.log("running a task every 1 day");
  // smsService.checkSMSBalance(app.db);
 
+});
+
+cron.schedule('*/2 * * * *', function () {
+  cronOrdersService.checkOrderStatusZeroCC(app.db)
 });
 
   // Fire up the cron job to clear temp held stock

@@ -37,7 +37,6 @@ sendSMS = async function ( phoneNumber, smsContent, req, db = null) {
             response: response,
             phoneNumber: phoneNumber,
             created: new Date(),
-            ipAddress: req.ip,
             isSuccess: true
           };
         if(req){
@@ -56,7 +55,6 @@ sendSMS = async function ( phoneNumber, smsContent, req, db = null) {
         error: err,
         phoneNumber: phoneNumber,
         created: new Date(),
-        ipAddress: req.ip,
         isSuccess: false
       };
       if(req){
