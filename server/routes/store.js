@@ -85,7 +85,7 @@ router.get("/api/store/download-app", async (req, res) => {
 
 router.get("/api/store/is-should-update", async (req, res) => {
   const version = req.headers['app-version'];
-  const isValidVersion = compareVersions(version, '1.0.21');
+  const isValidVersion = compareVersions(version, '1.0.22');
 if(!isValidVersion){
    res.status(200).json(true);
 
