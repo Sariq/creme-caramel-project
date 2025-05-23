@@ -59,6 +59,15 @@ fireWebscoketEvent = function (
     });
   }
 };
+
+setInterval(() => {
+  clients.forEach((ws, key) => {
+    if (ws.readyState === ws.OPEN) {
+      ws.ping();
+    }
+  });
+}, 30000);
+
 const websocket = {
   fireWebscoketEvent: fireWebscoketEvent,
   initWebSockets: initWebSockets,
