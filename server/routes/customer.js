@@ -47,7 +47,7 @@ router.post("/api/customer/validateAuthCode", async (req, res) => {
     (customerObj.phone === "1234567895" && customerObj.authCode === "1234") ||
     (customerObj.phone === "1234567896" && customerObj.authCode === "1234") ||
     (customerObj.phone === "1234567897" && customerObj.authCode === "1234") ||
-    // (customerObj.phone === "0536660444" && customerObj.authCode === "1234") ||
+    // (customerObj.phone === "0504446910" && customerObj.authCode === "1234") ||
     (customerObj.phone === "1234567899" && customerObj.authCode === "1234")
   ) {
     const customerNewUpdate = {
@@ -117,7 +117,7 @@ router.post("/api/customer/create", async (req, res) => {
       customer.phone !== "1234567895" &&
       customer.phone !== "1234567896" &&
       customer.phone !== "1234567897" &&
-     // customer.phone !== "0536660444" &&
+     // customer.phone !== "0504446910" &&
       customer.phone !== "1234567899"
     ) {
       const smsContent = smsService.getVerifyCodeContent(random4DigitsCode, req.body?.language);
@@ -139,7 +139,7 @@ router.post("/api/customer/create", async (req, res) => {
       customerObj.phone !== "1234567895" &&
       customerObj.phone !== "1234567896" &&
       customerObj.phone !== "1234567897" &&
-   //   customerObj.phone !== "0536660444" &&
+   //   customerObj.phone !== "0504446910" &&
    customerObj.phone !== "1234567899"
     ) {
       const smsContent = smsService.getVerifyCodeContent(random4DigitsCode, req.body?.language);

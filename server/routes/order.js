@@ -356,7 +356,7 @@ router.post("/api/order/updateCCPayment", async (req, res, next) => {
             orderDoc.app_language
           );
           await smsService.sendSMS(customer.phone, smsContent, req);
-          await smsService.sendSMS("0536660444", smsContent, req);
+          await smsService.sendSMS("0504446910", smsContent, req);
           await smsService.sendSMS("0542454362", smsContent, req);
 
           setTimeout(async () => {
@@ -390,7 +390,7 @@ router.post("/api/order/updateCCPayment", async (req, res, next) => {
                 // const invoiceSmsContent =
                 //   smsService.getOrderInvoiceContent(res);
                 // //smsService.sendSMS(customer.phone, smsContent, req);
-                // //smsService.sendSMS("0536660444", smsContent, req);
+                // //smsService.sendSMS("0504446910", smsContent, req);
                 // smsService.sendSMS("0542454362", invoiceSmsContent, req);
               })
               .catch((err) => {
@@ -541,7 +541,7 @@ router.post(
           orderDoc.app_language
         );
         await smsService.sendSMS(customer.phone, smsContent, req);
-        await smsService.sendSMS("0536660444", smsContent, req);
+        await smsService.sendSMS("0504446910", smsContent, req);
         await smsService.sendSMS("0542454362", smsContent, req);
         websockets.fireWebscoketEvent("new order", finalOrderDoc);
       }
@@ -635,7 +635,7 @@ router.post(
       //   orderDoc.app_language
       // );
       //smsService.sendSMS(customer.phone, smsContent, req);
-      // smsService.sendSMS("0536660444", smsContent, req);
+      // smsService.sendSMS("0504446910", smsContent, req);
       // smsService.sendSMS("0542454362", smsContent, req);
 
       const finalOrderDoc = {
@@ -700,7 +700,7 @@ router.post("/api/order/update", auth.required, async (req, res) => {
           );
       }
       await smsService.sendSMS(customer.phone, smsContent, req);
-      await smsService.sendSMS("0536660444", smsContent, req);
+      await smsService.sendSMS("0504446910", smsContent, req);
       await smsService.sendSMS("0542454362", smsContent, req);
     }
 
@@ -711,7 +711,7 @@ router.post("/api/order/update", auth.required, async (req, res) => {
     //     order.app_language,
     //     order.orderDate
     //   );
-    //   smsService.sendSMS("0536660444", smsContent, req);
+    //   smsService.sendSMS("0504446910", smsContent, req);
     //   smsService.sendSMS("0542454362", smsContent, req);
     // }
 
